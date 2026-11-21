@@ -81,29 +81,29 @@ PanelWindow {
 
     function volumeGlyph() {
         if (root.muted || root.sinkVolume <= 0.001)
-            return "\uf0582";
+            return "\uf026";
         if (root.sinkVolume < 0.33)
-            return "\uf0580";
+            return "\uf027";
         if (root.sinkVolume < 0.66)
-            return "\uf057f";
-        return "\uf057e";
+            return "\uf028";
+        return "\uf028";
     }
 
     function networkGlyph() {
         if (Networking.connectivity === NetworkConnectivity.None)
-            return "\uf05aa";
+            return "\uf071";
         if (root.wifiDevice && root.wifiDevice.connected)
-            return "\uf05a9";
-        return "\uf0200";
+            return "\uf1eb";
+        return "\uf0ac";
     }
 
     function batteryGlyph() {
         if (!root.battery || !root.battery.isPresent)
-            return "\uf0079";
+            return "\uf240";
         if (root.battery.state === UPowerDeviceState.Charging
                 || root.battery.state === UPowerDeviceState.FullyCharged)
-            return "\uf0084";
-        return "\uf0079";
+            return "\uf1e6";
+        return "\uf240";
     }
 
     function toggleVolumeMute() {
@@ -146,7 +146,7 @@ PanelWindow {
             spacing: 4
 
             IconButton {
-                glyph: "\uf02fd"
+                glyph: "\uf0c9"
                 iconSize: 15
                 active: Ui.panel === "launcher"
                 onClicked: Ui.toggle("launcher", root.monitorName)
@@ -276,7 +276,7 @@ PanelWindow {
 
                     Icon {
                         anchors.verticalCenter: parent.verticalCenter
-                        glyph: "\uf075a"
+                        glyph: "\uf001"
                         size: 13
                         color: Media.playing ? Theme.accent : Theme.subtext
                     }
@@ -418,7 +418,7 @@ PanelWindow {
 
             IconButton {
                 visible: Settings.data.showBluetooth && root.btAvailable
-                glyph: "\uf00af"
+                glyph: "\uf294"
                 iconSize: 14
                 active: Ui.panel === "network"
                 tint: Bluetooth.defaultAdapter && Bluetooth.defaultAdapter.enabled
@@ -465,7 +465,7 @@ PanelWindow {
 
             IconButton {
                 visible: Settings.data.showNotifications
-                glyph: "\uf009a"
+                glyph: "\uf0f3"
                 iconSize: 14
                 active: Ui.panel === "control"
                 onClicked: {
@@ -487,7 +487,7 @@ PanelWindow {
             }
 
             IconButton {
-                glyph: "\uf0493"
+                glyph: "\uf013"
                 iconSize: 14
                 active: Ui.panel === "settings"
                 onClicked: Ui.toggle("settings", root.monitorName)
@@ -495,7 +495,7 @@ PanelWindow {
 
             IconButton {
                 visible: Settings.data.showPower
-                glyph: "\uf0425"
+                glyph: "\uf011"
                 iconSize: 14
                 active: Ui.panel === "power"
                 onClicked: Ui.toggle("power", root.monitorName)

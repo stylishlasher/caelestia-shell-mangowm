@@ -7,7 +7,7 @@ Item {
 
     property string iconName: ""
     property int size: 24
-    property string fallbackGlyph: "\uf02fd"
+    property string fallbackGlyph: "\uf0c9"
     property bool useFallbackColor: false
 
     readonly property string resolved: {

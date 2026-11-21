@@ -20,16 +20,16 @@ PanelWindow {
 
     readonly property string glyph: {
         if (Ui.osd === "brightness")
-            return "\uf0599";
+            return "\uf185";
         if (Ui.osd === "mic")
-            return Ui.osdMuted ? "\uf0581" : "\uf0580";
+            return Ui.osdMuted ? "\uf131" : "\uf027";
         if (Ui.osdMuted || Ui.osdPercent <= 0)
-            return "\uf0582";
+            return "\uf026";
         if (Ui.osdPercent < 33)
-            return "\uf0580";
+            return "\uf027";
         if (Ui.osdPercent < 66)
-            return "\uf057f";
-        return "\uf057e";
+            return "\uf028";
+        return "\uf028";
     }
 
     readonly property string label: {

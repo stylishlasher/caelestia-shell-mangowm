@@ -37,12 +37,12 @@ DropPanel {
 
     function volumeIcon(muted, volume) {
         if (muted || volume <= 0.001)
-            return "\uf0582";
+            return "\uf026";
         if (volume < 0.33)
-            return "\uf0580";
+            return "\uf027";
         if (volume < 0.66)
-            return "\uf057f";
-        return "\uf057e";
+            return "\uf028";
+        return "\uf028";
     }
 
     Flickable {
@@ -63,7 +63,7 @@ DropPanel {
 
                 Icon {
                     anchors.verticalCenter: parent.verticalCenter
-                    glyph: "\uf057e"
+                    glyph: "\uf028"
                     size: 17
                     color: Theme.accent
                 }
@@ -153,7 +153,7 @@ DropPanel {
 
                 IconButton {
                     glyph: root.source && root.source.audio && root.source.audio.muted
-                        ? "\uf0581" : "\uf0580"
+                        ? "\uf131" : "\uf027"
                     iconSize: 16
                     padding: 7
                     tint: root.source && root.source.audio && root.source.audio.muted
@@ -250,7 +250,7 @@ DropPanel {
                         IconButton {
                             anchors.verticalCenter: parent.verticalCenter
                             glyph: streamBlock.modelData.audio && streamBlock.modelData.audio.muted
-                                ? "\uf0581" : "\uf057e"
+                                ? "\uf131" : "\uf028"
                             iconSize: 11
                             padding: 5
                             tint: streamBlock.modelData.audio && streamBlock.modelData.audio.muted

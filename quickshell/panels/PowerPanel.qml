@@ -11,11 +11,11 @@ DropPanel {
     preferredHeight: 260
 
     readonly property var actions: [
-        { name: "Блокировка", glyph: "\uf033e", command: "exec \"$HOME/.config/mango/scripts/lock\" 2>/dev/null || loginctl lock-session", accent: Theme.accent },
-        { name: "Выйти из сессии", glyph: "\uf0343", command: "mmsg dispatch quit 2>/dev/null || mmsg -d quit 2>/dev/null; sleep 1; pkill -TERM -x mango 2>/dev/null || true", accent: Theme.secondary },
-        { name: "Сон", glyph: "\uf04b2", command: "systemctl suspend", accent: Theme.blue },
-        { name: "Перезагрузка", glyph: "\uf0450", command: "systemctl reboot", accent: Theme.yellow },
-        { name: "Выключение", glyph: "\uf0425", command: "systemctl poweroff", accent: Theme.red }
+        { name: "Блокировка", glyph: "\uf023", command: "exec \"$HOME/.config/mango/scripts/lock\" 2>/dev/null || loginctl lock-session", accent: Theme.accent },
+        { name: "Выйти из сессии", glyph: "\uf08b", command: "mmsg dispatch quit 2>/dev/null || mmsg -d quit 2>/dev/null; sleep 1; pkill -TERM -x mango 2>/dev/null || true", accent: Theme.secondary },
+        { name: "Сон", glyph: "\uf186", command: "systemctl suspend", accent: Theme.blue },
+        { name: "Перезагрузка", glyph: "\uf021", command: "systemctl reboot", accent: Theme.yellow },
+        { name: "Выключение", glyph: "\uf011", command: "systemctl poweroff", accent: Theme.red }
     ]
 
     Column {
@@ -28,7 +28,7 @@ DropPanel {
 
             Icon {
                 anchors.verticalCenter: parent.verticalCenter
-                glyph: "\uf0425"
+                glyph: "\uf011"
                 size: 18
                 color: Theme.accent
             }
@@ -114,7 +114,7 @@ DropPanel {
         Chip {
             anchors.horizontalCenter: parent.horizontalCenter
             label: "Открыть mango-settings"
-            glyph: "\uf0493"
+            glyph: "\uf013"
             onClicked: Utils.run("exec \"$HOME/.config/mango/scripts/launch\" settings")
         }
     }

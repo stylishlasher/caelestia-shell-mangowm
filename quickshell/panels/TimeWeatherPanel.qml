@@ -84,7 +84,7 @@ DropPanel {
 
                 IconButton {
                     anchors.verticalCenter: parent.verticalCenter
-                    glyph: "\uf0456"
+                    glyph: "\uf021"
                     iconSize: 14
                     tint: Theme.subtext
                     onClicked: Weather.refresh()
@@ -92,7 +92,7 @@ DropPanel {
 
                 IconButton {
                     anchors.verticalCenter: parent.verticalCenter
-                    glyph: "\uf0156"
+                    glyph: "\uf00d"
                     iconSize: 13
                     tint: Theme.subtext
                     onClicked: Ui.close()
@@ -163,14 +163,14 @@ DropPanel {
                 Repeater {
                     model: [
                         { label: "Влажность", value: Weather.hasData ? Weather.humidity + "%" : "—",
-                          glyph: "\uf058e" },
+                          glyph: "\uf072" },
                         { label: "Ветер", value: Weather.hasData
                             ? (Weather.windText(Weather.windSpeed) + " " + Utils.windDir(Weather.windDirection))
-                            : "—", glyph: "\uf059d" },
+                            : "—", glyph: "\uf043" },
                         { label: "Рассвет", value: root.daily && root.daily.sunrise
-                            ? root.sunTime(root.daily.sunrise[0]) : "—", glyph: "\uf0599" },
+                            ? root.sunTime(root.daily.sunrise[0]) : "—", glyph: "\uf185" },
                         { label: "Закат", value: root.daily && root.daily.sunset
-                            ? root.sunTime(root.daily.sunset[0]) : "—", glyph: "\uf0594" }
+                            ? root.sunTime(root.daily.sunset[0]) : "—", glyph: "\uf186" }
                     ]
 
                     Rectangle {

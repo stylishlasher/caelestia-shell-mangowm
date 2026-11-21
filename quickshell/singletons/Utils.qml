@@ -77,26 +77,26 @@ Singleton {
     function weatherIcon(code, isDay) {
         code = Number(code);
         if (code === 0 || code === 1)
-            return isDay === false ? "\uf0594" : "\uf0599";
+            return isDay === false ? "\uf186" : "\uf185";
         if (code === 2)
-            return "\uf0595";
+            return "\uf185";
         if (code === 3)
-            return "\uf0590";
+            return "\uf0c2";
         if (code === 45 || code === 48)
-            return "\uf0591";
+            return "\uf0c2";
         if (code >= 51 && code <= 57)
-            return "\uf0597";
+            return "\uf043";
         if (code >= 61 && code <= 67)
-            return "\uf0597";
+            return "\uf043";
         if (code >= 71 && code <= 77)
-            return "\uf0598";
+            return "\uf2dc";
         if (code >= 80 && code <= 82)
-            return "\uf0596";
+            return "\uf043";
         if (code === 85 || code === 86)
-            return "\uf0598";
+            return "\uf2dc";
         if (code >= 95)
-            return "\uf0593";
-        return "\uf0590";
+            return "\uf0e7";
+        return "\uf0c2";
     }
 
     function weatherText(code) {

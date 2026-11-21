@@ -136,7 +136,7 @@ WlSessionLockSurface {
 
             Icon {
                 anchors.centerIn: parent
-                glyph: "\uf033e"
+                glyph: "\uf023"
                 size: 30
                 color: Theme.accent
             }
@@ -166,7 +166,7 @@ WlSessionLockSurface {
                 anchors.left: parent.left
                 anchors.leftMargin: 14
                 anchors.verticalCenter: parent.verticalCenter
-                glyph: "\uf033e"
+                glyph: "\uf023"
                 size: 14
                 color: root.authenticating ? Theme.accent : Theme.subtext
             }
@@ -228,7 +228,7 @@ WlSessionLockSurface {
 
                 Icon {
                     anchors.verticalCenter: parent.verticalCenter
-                    glyph: "\uf033e"
+                    glyph: "\uf023"
                     size: 13
                     color: Theme.accent
                 }

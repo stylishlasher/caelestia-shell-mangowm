@@ -116,7 +116,7 @@ Scope {
 
                     Icon {
                         anchors.verticalCenter: parent.verticalCenter
-                        glyph: Weather.hasData ? Utils.weatherIcon(Weather.weatherCode, Weather.isDay) : "\uf0590"
+                        glyph: Weather.hasData ? Utils.weatherIcon(Weather.weatherCode, Weather.isDay) : "\uf0c2"
                         size: 28
                         color: Theme.accent
                     }
@@ -234,7 +234,7 @@ Scope {
                         Icon {
                             anchors.centerIn: parent
                             visible: art.status !== Image.Ready || Media.artUrl.length === 0
-                            glyph: "\uf075a"
+                            glyph: "\uf001"
                             size: 22
                             color: Utils.alpha(Theme.subtext, 0.7)
                         }
@@ -297,23 +297,23 @@ Scope {
                     spacing: 10
 
                     IconButton {
-                        glyph: "\uf04ae"
+                        glyph: "\uf048"
                         iconSize: 14
                         onClicked: Media.previous()
                     }
                     IconButton {
-                        glyph: Media.playing ? "\uf03e4" : "\uf040a"
+                        glyph: Media.playing ? "\uf04c" : "\uf04b"
                         iconSize: 15
                         active: Media.playing
                         onClicked: Media.toggle()
                     }
                     IconButton {
-                        glyph: "\uf04ad"
+                        glyph: "\uf051"
                         iconSize: 14
                         onClicked: Media.next()
                     }
                     IconButton {
-                        glyph: "\uf075a"
+                        glyph: "\uf001"
                         iconSize: 13
                         onClicked: Ui.toggle("music", root.screenName)
                     }

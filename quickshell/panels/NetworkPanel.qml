@@ -84,7 +84,7 @@ DropPanel {
     }
 
     function strengthGlyph() {
-        return "\uf05a9";
+        return "\uf1eb";
     }
 
     Flickable {
@@ -105,7 +105,7 @@ DropPanel {
 
                 Icon {
                     anchors.verticalCenter: parent.verticalCenter
-                    glyph: "\uf05a9"
+                    glyph: "\uf1eb"
                     size: 18
                     color: Theme.accent
                 }
@@ -230,7 +230,7 @@ DropPanel {
                             Icon {
                                 anchors.verticalCenter: parent.verticalCenter
                                 visible: root.isSecured(networkRow.modelData)
-                                glyph: "\uf033e"
+                                glyph: "\uf023"
                                 size: 11
                                 color: Theme.subtext
                             }
@@ -238,7 +238,7 @@ DropPanel {
                             Icon {
                                 anchors.verticalCenter: parent.verticalCenter
                                 visible: networkRow.modelData.connected
-                                glyph: "\uf012c"
+                                glyph: "\uf00c"
                                 size: 12
                                 color: Theme.accent
                             }
@@ -325,7 +325,7 @@ DropPanel {
 
                 Icon {
                     anchors.verticalCenter: parent.verticalCenter
-                    glyph: "\uf00af"
+                    glyph: "\uf294"
                     size: 17
                     color: Theme.accent
                 }
@@ -345,7 +345,7 @@ DropPanel {
                     anchors.verticalCenter: parent.verticalCenter
                     visible: root.adapter !== null
                     label: root.adapter && root.adapter.discovering ? "Поиск…" : "Поиск устройств"
-                    glyph: "\uf0349"
+                    glyph: "\uf002"
                     active: root.adapter && root.adapter.discovering
                     onClicked: {
                         if (root.adapter)
@@ -415,7 +415,7 @@ DropPanel {
                             anchors.left: parent.left
                             anchors.leftMargin: 10
                             anchors.verticalCenter: parent.verticalCenter
-                            glyph: "\uf00af"
+                            glyph: "\uf294"
                             size: 15
                             color: btRow.modelData.connected ? Theme.accent : Theme.subtext
                         }
@@ -468,7 +468,7 @@ DropPanel {
                             Icon {
                                 anchors.verticalCenter: parent.verticalCenter
                                 visible: btRow.modelData.connected
-                                glyph: "\uf012c"
+                                glyph: "\uf00c"
                                 size: 12
                                 color: Theme.accent
                             }

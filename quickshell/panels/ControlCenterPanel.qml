@@ -43,12 +43,12 @@ DropPanel {
 
     function volumeIcon(muted, volume) {
         if (muted || volume <= 0.001)
-            return "\uf0582";
+            return "\uf026";
         if (volume < 0.33)
-            return "\uf0580";
+            return "\uf027";
         if (volume < 0.66)
-            return "\uf057f";
-        return "\uf057e";
+            return "\uf028";
+        return "\uf028";
     }
 
     function nodeLabel(node) {
@@ -134,14 +134,14 @@ DropPanel {
                 Chip {
                     anchors.verticalCenter: parent.verticalCenter
                     label: Notifications.dnd ? "Не беспокоить" : "Уведомления"
-                    glyph: Notifications.dnd ? "\uf009a" : "\uf009a"
+                    glyph: Notifications.dnd ? "\uf0f3" : "\uf0f3"
                     active: Notifications.dnd
                     onClicked: Notifications.toggleDnd()
                 }
 
                 IconButton {
                     anchors.verticalCenter: parent.verticalCenter
-                    glyph: "\uf0156"
+                    glyph: "\uf00d"
                     iconSize: 13
                     tint: Theme.subtext
                     onClicked: Ui.close()
@@ -170,7 +170,7 @@ DropPanel {
                         Icon {
                             anchors.horizontalCenter: parent.horizontalCenter
                             glyph: Networking.connectivity === NetworkConnectivity.None
-                                ? "\uf05aa" : "\uf05a9"
+                                ? "\uf071" : "\uf1eb"
                             size: 17
                             color: Networking.wifiEnabled ? Theme.accent : Theme.subtext
                         }
@@ -207,7 +207,7 @@ DropPanel {
 
                         Icon {
                             anchors.horizontalCenter: parent.horizontalCenter
-                            glyph: "\uf00af"
+                            glyph: "\uf294"
                             size: 17
                             color: root.adapter && root.adapter.enabled ? Theme.accent : Theme.subtext
                         }
@@ -248,7 +248,7 @@ DropPanel {
 
                         Icon {
                             anchors.horizontalCenter: parent.horizontalCenter
-                            glyph: "\uf009a"
+                            glyph: "\uf0f3"
                             size: 17
                             color: Notifications.dnd ? Theme.accent : Theme.subtext
                         }
@@ -284,7 +284,7 @@ DropPanel {
 
                         Icon {
                             anchors.horizontalCenter: parent.horizontalCenter
-                            glyph: root.micMuted ? "\uf0581" : "\uf0580"
+                            glyph: root.micMuted ? "\uf131" : "\uf027"
                             size: 17
                             color: root.micMuted ? Theme.red : Theme.subtext
                         }
@@ -362,7 +362,7 @@ DropPanel {
 
                 IconButton {
                     anchors.verticalCenter: parent.verticalCenter
-                    glyph: "\uf0599"
+                    glyph: "\uf185"
                     iconSize: 15
                     tint: Theme.text
                     available: Brightness.available
@@ -416,7 +416,7 @@ DropPanel {
                         id: sinkChip
                         required property var modelData
                         label: root.nodeLabel(sinkChip.modelData)
-                        glyph: "\uf057e"
+                        glyph: "\uf028"
                         active: root.sink && root.sink.id === sinkChip.modelData.id
                         onClicked: root.setSink(sinkChip.modelData)
                     }
@@ -445,7 +445,7 @@ DropPanel {
                     anchors.verticalCenter: parent.verticalCenter
                     visible: Notifications.tracked.length > 0
                     label: "Очистить"
-                    glyph: "\uf01b4"
+                    glyph: "\uf074"
                     onClicked: Notifications.dismissAll()
                 }
             }
@@ -529,7 +529,7 @@ DropPanel {
                             anchors.rightMargin: 4
                             anchors.top: parent.top
                             anchors.topMargin: 4
-                            glyph: "\uf0156"
+                            glyph: "\uf00d"
                             iconSize: 10
                             padding: 5
                             tint: Theme.subtext
@@ -568,10 +568,10 @@ DropPanel {
 
                 Repeater {
                     model: [
-                        { id: "lock", label: "Блокировка", glyph: "\uf033e" },
-                        { id: "logout", label: "Выйти", glyph: "\uf0343" },
-                        { id: "reboot", label: "Перезагрузка", glyph: "\uf0709" },
-                        { id: "poweroff", label: "Выключить", glyph: "\uf0425" }
+                        { id: "lock", label: "Блокировка", glyph: "\uf023" },
+                        { id: "logout", label: "Выйти", glyph: "\uf08b" },
+                        { id: "reboot", label: "Перезагрузка", glyph: "\uf021" },
+                        { id: "poweroff", label: "Выключить", glyph: "\uf011" }
                     ]
 
                     Rectangle {

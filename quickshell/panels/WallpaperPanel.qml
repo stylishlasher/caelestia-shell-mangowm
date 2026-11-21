@@ -75,7 +75,7 @@ DropPanel {
 
             Icon {
                 anchors.verticalCenter: parent.verticalCenter
-                glyph: "\uf02e9"
+                glyph: "\uf03e"
                 size: 16
                 color: Theme.accent
             }
@@ -94,27 +94,27 @@ DropPanel {
             Chip {
                 anchors.verticalCenter: parent.verticalCenter
                 label: "Обновить"
-                glyph: "\uf0456"
+                glyph: "\uf021"
                 onClicked: root.scan()
             }
 
             Chip {
                 anchors.verticalCenter: parent.verticalCenter
                 label: "Случайные"
-                glyph: "\uf01b4"
+                glyph: "\uf074"
                 onClicked: Utils.run("stylish-set-wallpaper --random")
             }
 
             Chip {
                 anchors.verticalCenter: parent.verticalCenter
                 label: "Папка"
-                glyph: "\uf024b"
+                glyph: "\uf07b"
                 onClicked: Utils.run("xdg-open " + Utils.shq(root.directory))
             }
 
             IconButton {
                 anchors.verticalCenter: parent.verticalCenter
-                glyph: "\uf0156"
+                glyph: "\uf00d"
                 iconSize: 13
                 tint: Theme.subtext
                 onClicked: Ui.close()
@@ -191,7 +191,7 @@ DropPanel {
 
                             Icon {
                                 anchors.centerIn: parent
-                                glyph: "\uf012c"
+                                glyph: "\uf00c"
                                 size: 11
                                 color: Theme.onAccent
                             }
@@ -207,7 +207,7 @@ DropPanel {
 
                             Icon {
                                 anchors.centerIn: parent
-                                glyph: "\uf02e9"
+                                glyph: "\uf03e"
                                 size: 14
                                 color: Theme.text
                             }

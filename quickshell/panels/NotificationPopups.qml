@@ -188,7 +188,7 @@ Scope {
                         anchors.rightMargin: 5
                         anchors.top: parent.top
                         anchors.topMargin: 5
-                        glyph: "\uf0156"
+                        glyph: "\uf00d"
                         iconSize: 10
                         padding: 5
                         tint: Theme.subtext

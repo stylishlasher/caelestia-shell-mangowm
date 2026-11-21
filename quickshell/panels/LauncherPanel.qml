@@ -90,7 +90,7 @@ DropPanel {
                 anchors.left: parent.left
                 anchors.leftMargin: 14
                 anchors.verticalCenter: parent.verticalCenter
-                glyph: "\uf0349"
+                glyph: "\uf002"
                 size: 16
                 color: Theme.subtext
             }
@@ -228,9 +228,9 @@ DropPanel {
 
             Repeater {
                 model: [
-                    { label: "Настройки", glyph: "\uf0493", action: "settings" },
-                    { label: "Обои", glyph: "\uf02e9", action: "wallpaper" },
-                    { label: "Блокировка", glyph: "\uf033e", action: "lock" }
+                    { label: "Настройки", glyph: "\uf013", action: "settings" },
+                    { label: "Обои", glyph: "\uf03e", action: "wallpaper" },
+                    { label: "Блокировка", glyph: "\uf023", action: "lock" }
                 ]
 
                 Rectangle {

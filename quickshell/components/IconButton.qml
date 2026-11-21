@@ -6,7 +6,7 @@ Item {
 
     property string glyph: ""
     property int iconSize: 15
-    property int padding: 7
+    property int padding: 5
     property bool active: false
     property bool available: true
     property bool bold: false

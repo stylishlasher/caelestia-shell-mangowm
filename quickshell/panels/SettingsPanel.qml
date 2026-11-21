@@ -15,12 +15,12 @@ DropPanel {
     property string appQuery: ""
 
     readonly property var categories: [
-        { name: "Оформление", glyph: "\uf03d8" },
-        { name: "Панель", glyph: "\uf062a" },
-        { name: "Док", glyph: "\uf02fd" },
-        { name: "Виджеты", glyph: "\uf009a" },
-        { name: "Погода", glyph: "\uf0590" },
-        { name: "Система", glyph: "\uf0493" }
+        { name: "Оформление", glyph: "\uf1fc" },
+        { name: "Панель", glyph: "\uf2d0" },
+        { name: "Док", glyph: "\uf0c9" },
+        { name: "Виджеты", glyph: "\uf0f3" },
+        { name: "Погода", glyph: "\uf0c2" },
+        { name: "Система", glyph: "\uf013" }
     ]
 
     readonly property var accentChoices: [
@@ -534,7 +534,7 @@ DropPanel {
                                     id: removeButton
                                     anchors.right: parent.right
                                     anchors.verticalCenter: parent.verticalCenter
-                                    glyph: "\uf0156"
+                                    glyph: "\uf00d"
                                     iconSize: 11
                                     padding: 6
                                     tint: Theme.subtext
@@ -550,7 +550,7 @@ DropPanel {
 
                         Chip {
                             label: "Добавить приложение"
-                            glyph: "\uf0415"
+                            glyph: "\uf067"
                             active: root.addingApp
                             onClicked: root.addingApp = !root.addingApp
                         }
@@ -863,12 +863,12 @@ DropPanel {
                         spacing: 8
                         Chip {
                             label: "Обновить сейчас"
-                            glyph: "\uf0456"
+                            glyph: "\uf021"
                             onClicked: Weather.refresh()
                         }
                         Chip {
                             label: "Найти город"
-                            glyph: "\uf0349"
+                            glyph: "\uf002"
                             available: !Weather.loading
                             onClicked: Weather.refresh()
                         }
@@ -960,12 +960,12 @@ DropPanel {
                         spacing: 8
                         Chip {
                             label: "Выбрать обои"
-                            glyph: "\uf02e9"
+                            glyph: "\uf03e"
                             onClicked: Ui.open("wallpaper", root.screen ? root.screen.name : "")
                         }
                         Chip {
                             label: "Случайные обои"
-                            glyph: "\uf0456"
+                            glyph: "\uf021"
                             onClicked: Utils.run("stylish-set-wallpaper --random")
                         }
                     }
@@ -977,7 +977,7 @@ DropPanel {
                         description: "Перезагрузить QML без выхода из сессии"
                         Chip {
                             label: "Перезапустить"
-                            glyph: "\uf0709"
+                            glyph: "\uf021"
                             onClicked: Utils.run("stylish-shell reload")
                         }
                     }
@@ -987,7 +987,7 @@ DropPanel {
                         description: "settings.json и локальные данные"
                         Chip {
                             label: "Открыть"
-                            glyph: "\uf024b"
+                            glyph: "\uf07b"
                             onClicked: Utils.run("xdg-open \"$HOME/.config/stylish\"")
                         }
                     }

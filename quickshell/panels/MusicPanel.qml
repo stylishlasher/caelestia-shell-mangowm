@@ -193,7 +193,7 @@ DropPanel {
 
             Icon {
                 anchors.verticalCenter: parent.verticalCenter
-                glyph: "\uf075a"
+                glyph: "\uf001"
                 size: 16
                 color: Theme.accent
             }
@@ -213,14 +213,14 @@ DropPanel {
                 anchors.verticalCenter: parent.verticalCenter
                 visible: root.player !== null
                 label: root.player ? (root.player.identity || "Плеер") : ""
-                glyph: "\uf040a"
+                glyph: "\uf04b"
                 active: Media.playing
                 onClicked: Media.toggle()
             }
 
             IconButton {
                 anchors.verticalCenter: parent.verticalCenter
-                glyph: "\uf0156"
+                glyph: "\uf00d"
                 iconSize: 13
                 tint: Theme.subtext
                 onClicked: Ui.close()
@@ -254,7 +254,7 @@ DropPanel {
                 Icon {
                     anchors.centerIn: parent
                     visible: artImage.status !== Image.Ready || Media.artUrl.length === 0
-                    glyph: "\uf075a"
+                    glyph: "\uf001"
                     size: 44
                     color: Utils.alpha(Theme.subtext, 0.6)
                 }
@@ -332,7 +332,7 @@ DropPanel {
                     spacing: 6
 
                     IconButton {
-                        glyph: "\uf04ae"
+                        glyph: "\uf048"
                         iconSize: 17
                         padding: 8
                         available: Media.hasPlayer
@@ -348,7 +348,7 @@ DropPanel {
 
                         Icon {
                             anchors.centerIn: parent
-                            glyph: Media.playing ? "\uf03e4" : "\uf040a"
+                            glyph: Media.playing ? "\uf04c" : "\uf04b"
                             size: 18
                             color: Theme.accent
                         }
@@ -364,7 +364,7 @@ DropPanel {
                     }
 
                     IconButton {
-                        glyph: "\uf04ad"
+                        glyph: "\uf051"
                         iconSize: 17
                         padding: 8
                         available: Media.hasPlayer
@@ -381,7 +381,7 @@ DropPanel {
 
             Icon {
                 anchors.verticalCenter: parent.verticalCenter
-                glyph: "\uf057e"
+                glyph: "\uf028"
                 size: 13
                 color: Theme.subtext
             }

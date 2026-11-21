@@ -101,7 +101,7 @@ DropPanel {
 
             Icon {
                 anchors.verticalCenter: parent.verticalCenter
-                glyph: "\uf018a"
+                glyph: "\uf0ea"
                 size: 17
                 color: Theme.accent
             }
@@ -120,14 +120,14 @@ DropPanel {
             Chip {
                 anchors.verticalCenter: parent.verticalCenter
                 label: "Обновить"
-                glyph: "\uf0456"
+                glyph: "\uf021"
                 onClicked: root.refresh()
             }
 
             Chip {
                 anchors.verticalCenter: parent.verticalCenter
                 label: "Очистить"
-                glyph: "\uf01b4"
+                glyph: "\uf074"
                 onClicked: root.wipe()
             }
         }
@@ -178,7 +178,7 @@ DropPanel {
                     anchors.left: parent.left
                     anchors.leftMargin: 10
                     anchors.verticalCenter: parent.verticalCenter
-                    glyph: clipRow.modelData.image ? "\uf02e9" : "\uf018a"
+                    glyph: clipRow.modelData.image ? "\uf03e" : "\uf0ea"
                     size: 14
                     color: Theme.subtext
                 }
@@ -205,7 +205,7 @@ DropPanel {
                     anchors.right: parent.right
                     anchors.rightMargin: 4
                     anchors.verticalCenter: parent.verticalCenter
-                    glyph: "\uf0156"
+                    glyph: "\uf00d"
                     iconSize: 11
                     padding: 6
                     tint: Theme.subtext

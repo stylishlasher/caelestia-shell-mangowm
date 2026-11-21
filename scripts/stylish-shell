@@ -27,15 +27,49 @@ QS_BIN="${QS_BIN:-qs}"
 
 CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 INSTALLED_CONFIG="$CONFIG_HOME/quickshell/$CONFIG_NAME/shell.qml"
+FLAT_CONFIG="$CONFIG_HOME/quickshell/shell.qml"
 DEV_CONFIG="$REPO_DIR/quickshell/shell.qml"
+LOCAL_CONFIG="$HOME/.local/quickshell/shell.qml"
 
-if [[ -f "$INSTALLED_CONFIG" ]]; then
-    QS_ARGS=(-c "$CONFIG_NAME")
+detect_config() {
+    # Если в ~/.config/quickshell есть shell.qml, qs считает это "default" конфигом
+    # и не регистрирует именованные подкаталоги. В этом случае используем -p.
+    if [[ -f "$FLAT_CONFIG" ]]; then
+        if [[ -f "$INSTALLED_CONFIG" ]]; then
+            QS_ARGS=(-p "$CONFIG_HOME/quickshell/$CONFIG_NAME")
+            CONFIG_PATH="$INSTALLED_CONFIG"
+            return 0
+        fi
+        if grep -q 'stylish' "$FLAT_CONFIG" 2>/dev/null || [[ -d "$CONFIG_HOME/quickshell/panels" ]]; then
+            QS_ARGS=(-p "$CONFIG_HOME/quickshell")
+            CONFIG_PATH="$FLAT_CONFIG"
+            return 0
+        fi
+    fi
+
+    if [[ -f "$INSTALLED_CONFIG" ]]; then
+        QS_ARGS=(-c "$CONFIG_NAME")
+        CONFIG_PATH="$INSTALLED_CONFIG"
+        return 0
+    fi
+
+    if [[ -f "$DEV_CONFIG" ]]; then
+        QS_ARGS=(-p "$REPO_DIR/quickshell")
+        CONFIG_PATH="$DEV_CONFIG"
+        return 0
+    fi
+
+    if [[ -f "$LOCAL_CONFIG" ]]; then
+        QS_ARGS=(-p "$HOME/.local/quickshell")
+        CONFIG_PATH="$LOCAL_CONFIG"
+        return 0
+    fi
+
+    QS_ARGS=(-p "$CONFIG_HOME/quickshell/$CONFIG_NAME")
     CONFIG_PATH="$INSTALLED_CONFIG"
-else
-    QS_ARGS=(-p "$REPO_DIR/quickshell")
-    CONFIG_PATH="$DEV_CONFIG"
-fi
+}
+
+detect_config
 
 RUNTIME_DIR="${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/stylish-shell-${UID}"
 mkdir -p "$RUNTIME_DIR"

@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+# Применить акцент из matugen (обновляет focus_color и ACCENT в settings.env)
+set -uo pipefail
+
+ENVF="$HOME/.config/mango/settings.env"
+ACCENT_FILE="$HOME/.config/mango/matugen-accent.env"
+CONF="$HOME/.config/mango/config.conf"
+WB="$HOME/.config/waybar"
+WB_COLORS="$WB/colors.css"
+
+[ -f "$ACCENT_FILE" ] || exit 0
+# shellcheck source=/dev/null
+. "$ACCENT_FILE"
+ACCENT="${ACCENT#\#}"
+[[ "$ACCENT" =~ ^[0-9a-fA-F]{6}$ ]] || exit 0
+
+mkdir -p "$(dirname "$ENVF")"
+touch "$ENVF"
+
+set_env_kv() {
+  local k="$1" v="$2" tmp found=0
+  if command -v flock >/dev/null 2>&1; then
+    exec 9>"$ENVF.lock"
+    flock 9
+  fi
+  tmp="$(mktemp "$(dirname "$ENVF")/.settings.env.XXXXXX")" || {
+    if command -v flock >/dev/null 2>&1; then flock -u 9 2>/dev/null || true; exec 9>&- 2>/dev/null || true; fi
+    return 1
+  }
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in
+      "${k}="*) printf '%s=%s\n' "$k" "$v" >> "$tmp"; found=1 ;;
+      *)        printf '%s\n' "$line" >> "$tmp" ;;
+    esac
+  done < "$ENVF"
+  [ "$found" = 1 ] || printf '%s=%s\n' "$k" "$v" >> "$tmp"
+  mv "$tmp" "$ENVF"
+  if command -v flock >/dev/null 2>&1; then
+    flock -u 9 2>/dev/null || true
+    exec 9>&- 2>/dev/null || true
+  fi
+}
+
+# Записать акцент и зафиксировать режим Matugen
+set_env_kv ACCENT "$ACCENT"
+set_env_kv MATUGEN 1
+set_env_kv COLOR_MODE matugen
+
+# Вернуть пользовательскую прозрачность панели/таблеток после генерации matugen
+if [ -f "$WB_COLORS" ]; then
+  # подтянуть BAR_OPACITY/PILL_OPACITY
+  BAR_OPACITY=0.65; PILL_OPACITY=0.55
+  # shellcheck disable=SC1090
+  [ -f "$ENVF" ] && . "$ENVF"
+  sed -i -E "s|^(@define-color bar_bg rgba\([0-9]+, [0-9]+, [0-9]+, )[0-9.]+\)|\1${BAR_OPACITY})|" "$WB_COLORS" 2>/dev/null || true
+  sed -i -E "s|^(@define-color pill rgba\([0-9]+, [0-9]+, [0-9]+, )[0-9.]+\)|\1${PILL_OPACITY})|" "$WB_COLORS" 2>/dev/null || true
+fi
+
+# focus_color в mango
+if grep -q "^focus_color=" "$CONF" 2>/dev/null; then
+  sed -i "s|^focus_color=.*|focus_color=0x${ACCENT}ff|" "$CONF"
+else
+  echo "focus_color=0x${ACCENT}ff" >> "$CONF"
+fi
+
+# color в waybar config (для calendar today и т.п.)
+if [ -f "$WB/config.jsonc" ]; then
+  sed -i "s|color='#[0-9a-fA-F]\{6\}'|color='#${ACCENT}'|" "$WB/config.jsonc"
+fi
+
+# Перезагрузка mango/waybar
+mmsg dispatch reload_config >/dev/null 2>&1 || mmsg -d reload_config >/dev/null 2>&1 || true
+pkill -SIGUSR2 waybar 2>/dev/null || true
+pkill -SIGUSR2 -f "waybar.*dock.jsonc" 2>/dev/null || true
+exit 0

@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+# Запускает приложения по умолчанию из settings.env
+. "$HOME/.config/mango/settings.env" 2>/dev/null
+
+run() {
+  local bin="${1%% *}"
+  if command -v "$bin" >/dev/null 2>&1; then
+    exec $1
+  fi
+  notify-send "Не найдено: $bin" "Поставь его или поменяй в Super+S → Приложения" 2>/dev/null
+  exit 1
+}
+
+case "$1" in
+  browser)
+    cmd="${BROWSER_CMD:-librewolf}"
+    # librewolf из flatpak
+    if ! command -v "${cmd%% *}" >/dev/null 2>&1 && command -v flatpak >/dev/null 2>&1 \
+       && flatpak info io.gitlab.librewolf-community >/dev/null 2>&1; then
+      cmd="flatpak run io.gitlab.librewolf-community"
+    fi
+    run "$cmd"
+    ;;
+  terminal) run "${TERMINAL_CMD:-foot}" ;;
+  files)    run "${FILES_CMD:-thunar}" ;;
+  settings)
+    # Super+S — тоггл: QS settings panel, fallback to mango-settings
+    if command -v stylish-shell >/dev/null 2>&1; then
+      stylish-shell toggle settings
+      exit 0
+    fi
+    if pgrep -f -- '--app-id mango-settings' >/dev/null 2>&1; then
+      pkill -f -- '--app-id mango-settings'
+      exit 0
+    fi
+    exec foot --app-id mango-settings -W 95x36 -e "$HOME/.local/bin/mango-settings"
+    ;;
+  nmtui)
+    # Тоггл: открыто → закрыть
+    if pgrep -f -- '--app-id mango-nmtui' >/dev/null 2>&1; then
+      pkill -f -- '--app-id mango-nmtui'
+      exit 0
+    fi
+    exec foot --app-id mango-nmtui -e nmtui
+    ;;
+  launcher)
+    # Тоггл QS лаунчера, fallback to fuzzel
+    if command -v stylish-shell >/dev/null 2>&1; then
+      stylish-shell toggle launcher
+      exit 0
+    fi
+    if pgrep -x fuzzel >/dev/null 2>&1; then
+      mapfile -t _fz_pids < <(pgrep -a fuzzel 2>/dev/null | awk '!/--dmenu/{print $1}')
+      if [ "${#_fz_pids[@]}" -gt 0 ]; then
+        kill "${_fz_pids[@]}" >/dev/null 2>&1 || true
+        exit 0
+      fi
+    fi
+    exec fuzzel
+    ;;
+  *)
+    echo "Usage: $0 {browser|terminal|files|settings|nmtui|launcher}"; exit 1 ;;
+esac

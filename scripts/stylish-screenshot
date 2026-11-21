@@ -1,0 +1,108 @@
+#!/usr/bin/env bash
+# stylish-screenshot — скриншоты Wayland с сохранением и буфером обмена.
+#
+#   stylish-screenshot              выделить область мышью
+#   stylish-screenshot --edit       выделить область и открыть satty
+#   stylish-screenshot --full       весь экран
+#   stylish-screenshot --full --edit
+#   stylish-screenshot --window     активное окно (через slurp)
+#   stylish-screenshot --copy       только скопировать, не сохранять
+#
+# Файлы сохраняются в ~/Pictures/Screenshots (или $XDG_PICTURES_DIR/Screenshots).
+
+set -euo pipefail
+
+PICTURES_DIR="${XDG_PICTURES_DIR:-$HOME/Pictures}"
+OUT_DIR="$PICTURES_DIR/Screenshots"
+
+mode="region"
+edit=false
+copy_only=false
+
+for arg in "$@"; do
+    case "$arg" in
+        --full|full) mode="full" ;;
+        --region|region) mode="region" ;;
+        --window|window) mode="window" ;;
+        --edit|-e) edit=true ;;
+        --copy|--clipboard) copy_only=true ;;
+        -h|--help|help)
+            sed -n '2,13p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+            exit 0
+            ;;
+        *)
+            printf 'stylish-screenshot: неизвестный аргумент %s\n' "$arg" >&2
+            exit 2
+            ;;
+    esac
+done
+
+command -v grim >/dev/null 2>&1 || {
+    printf 'stylish-screenshot: нужен grim (sudo pacman -S grim)\n' >&2
+    exit 1
+}
+
+notify() {
+    if command -v notify-send >/dev/null 2>&1; then
+        notify-send -a "Скриншоты" -i camera-photo "$@" >/dev/null 2>&1 || true
+    fi
+}
+
+copy_to_clipboard() {
+    if command -v wl-copy >/dev/null 2>&1; then
+        wl-copy --type image/png <"$1"
+    fi
+}
+
+tmp="$(mktemp --suffix=.png "${TMPDIR:-/tmp}/stylish-shot-XXXXXX.png")"
+trap 'rm -f "$tmp"' EXIT
+
+case "$mode" in
+    full)
+        grim "$tmp"
+        ;;
+    window|region)
+        command -v slurp >/dev/null 2>&1 || {
+            printf 'stylish-screenshot: нужен slurp (sudo pacman -S slurp)\n' >&2
+            exit 1
+        }
+        geometry="$(slurp)" || exit 0
+        grim -g "$geometry" "$tmp"
+        ;;
+esac
+
+[[ -s "$tmp" ]] || exit 0
+
+if $copy_only; then
+    copy_to_clipboard "$tmp"
+    notify "Скриншот скопирован" "Область сохранена в буфер обмена"
+    exit 0
+fi
+
+mkdir -p "$OUT_DIR"
+out="$OUT_DIR/Скриншот_$(date +%Y-%m-%d_%H-%M-%S).png"
+
+if $edit; then
+    if command -v satty >/dev/null 2>&1; then
+        satty --filename "$tmp" \
+            --output-filename "$out" \
+            --copy-command wl-copy \
+            --actions-on-enter save-to-file \
+            --actions-on-escape exit \
+            --early-exit save \
+            --disable-notifications
+        if [[ -f "$out" ]]; then
+            copy_to_clipboard "$out"
+            notify "Скриншот сохранён" "$out"
+            printf '%s\n' "$out"
+        fi
+        exit 0
+    fi
+    printf 'stylish-screenshot: satty не установлен, сохраняю без редактирования\n' >&2
+fi
+
+mv "$tmp" "$out"
+trap - EXIT
+copy_to_clipboard "$out"
+notify "Скриншот сохранён" "$out"
+printf '%s\n' "$out"

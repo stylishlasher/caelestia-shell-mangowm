@@ -1,0 +1,10 @@
+AppIcon 1.0 AppIcon.qml
+Chip 1.0 Chip.qml
+DropPanel 1.0 DropPanel.qml
+Field 1.0 Field.qml
+Icon 1.0 Icon.qml
+IconButton 1.0 IconButton.qml
+SectionHeader 1.0 SectionHeader.qml
+SettingRow 1.0 SettingRow.qml
+StyledSlider 1.0 StyledSlider.qml
+ToggleSwitch 1.0 ToggleSwitch.qml

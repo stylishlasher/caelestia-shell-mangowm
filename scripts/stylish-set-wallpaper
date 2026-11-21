@@ -1,0 +1,382 @@
+#!/usr/bin/env bash
+# stylish-set-wallpaper — установить обои и пересчитать палитру.
+#
+#   stylish-set-wallpaper <файл>   поставить обои
+#   stylish-set-wallpaper --random случайные обои из папки
+#   stylish-set-wallpaper --refresh пересчитать тему из текущих обоев
+#   stylish-set-wallpaper --no-apply не трогать обои (только темы)
+#
+# Палитра Matugen сохраняется в ~/.config/stylish/settings.json,
+# темы генерируются для Ghostty (~/.config/ghostty/themes/stylish),
+# Ski (~/.local/state/ski/themes/stylish.json) и Mango (~/.config/mango/colors.conf).
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+REPO_DIR="$(cd -- "$SCRIPT_DIR/.." && pwd)"
+CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
+SETTINGS="$CONFIG_HOME/stylish/settings.json"
+
+mode="apply"
+apply_wallpaper=true
+target=""
+
+usage() {
+    sed -n '2,10p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+}
+
+die() {
+    printf 'stylish-set-wallpaper: %s\n' "$*" >&2
+    exit 1
+}
+
+warn() {
+    printf 'stylish-set-wallpaper: %s\n' "$*" >&2
+}
+
+for arg in "$@"; do
+    case "$arg" in
+        --random|random) mode="random" ;;
+        --refresh|refresh) mode="refresh" ;;
+        --no-apply) apply_wallpaper=false ;;
+        -h|--help|help) usage; exit 0 ;;
+        --*) die "неизвестный аргумент: $arg" ;;
+        *) target="$arg" ;;
+    esac
+done
+
+command -v jq >/dev/null 2>&1 || die "нужен jq (sudo pacman -S jq)"
+
+mkdir -p "$(dirname "$SETTINGS")"
+if [[ ! -f "$SETTINGS" ]]; then
+    printf '{}\n' >"$SETTINGS"
+fi
+
+runtime="${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}"
+mkdir -p "$runtime"
+exec 9>"$runtime/stylish-wallpaper.lock"
+flock -w 10 9 || die "другой процесс уже меняет обои"
+
+get() {
+    jq -r --arg key "$1" '.[$key] // empty' "$SETTINGS"
+}
+
+expand_path() {
+    local path="$1"
+    [[ -n "$path" ]] || return 0
+    case "$path" in
+        "~") path="$HOME" ;;
+        "~/"*) path="$HOME/${path#\~/}" ;;
+    esac
+    [[ "$path" = /* ]] || path="$PWD/$path"
+    printf '%s\n' "$path"
+}
+
+list_images() {
+    local dir="$1"
+    [[ -d "$dir" ]] || return 0
+    find "$dir" -maxdepth 2 -type f \
+        \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' \
+        -o -iname '*.webp' -o -iname '*.avif' \) -print 2>/dev/null | sort
+}
+
+wallpaper_dir="$(expand_path "$(get wallpaperDir)")"
+[[ -n "$wallpaper_dir" ]] || wallpaper_dir="$HOME/Pictures/Wallpapers"
+[[ -d "$wallpaper_dir" ]] || wallpaper_dir="$REPO_DIR/assets/wallpapers"
+
+current="$(expand_path "$(get wallpaper)")"
+
+case "$mode" in
+    random)
+        mapfile -t images < <(list_images "$wallpaper_dir")
+        if (( ${#images[@]} == 0 )); then
+            mapfile -t images < <(list_images "$REPO_DIR/assets/wallpapers")
+        fi
+        (( ${#images[@]} > 0 )) || die "не найдено ни одного изображения в $wallpaper_dir"
+
+        if (( ${#images[@]} > 1 )) && [[ -n "$current" ]]; then
+            filtered=()
+            for image in "${images[@]}"; do
+                [[ "$image" == "$current" ]] || filtered+=("$image")
+            done
+            (( ${#filtered[@]} > 0 )) && images=("${filtered[@]}")
+        fi
+
+        target="${images[RANDOM % ${#images[@]}]}"
+        ;;
+    refresh)
+        if [[ -z "$target" ]]; then
+            target="$current"
+        fi
+        if [[ -z "$target" || ! -f "$target" ]]; then
+            target="$(list_images "$wallpaper_dir" | head -n 1)"
+        fi
+        if [[ -z "$target" || ! -f "$target" ]]; then
+            target="$(list_images "$REPO_DIR/assets/wallpapers" | head -n 1)"
+        fi
+        [[ -n "$target" && -f "$target" ]] || die "нет обоев для пересчёта темы"
+        ;;
+esac
+
+[[ -n "$target" ]] || die "укажите файл обоев или --random"
+target="$(readlink -f "$target")"
+[[ -f "$target" ]] || die "файл не найден: $target"
+
+# ---------------------------------------------------------------------------
+# wallpaper daemon
+# ---------------------------------------------------------------------------
+
+apply_image() {
+    local image="$1"
+
+    if command -v awww >/dev/null 2>&1; then
+        if ! awww query >/dev/null 2>&1; then
+            if command -v awww-daemon >/dev/null 2>&1; then
+                nohup awww-daemon >/dev/null 2>&1 &
+                for _ in $(seq 1 40); do
+                    awww query >/dev/null 2>&1 && break
+                    sleep 0.1
+                done
+            fi
+        fi
+        awww img --transition-type grow --transition-duration 0.8 \
+            --transition-fps 60 "$image" >/dev/null 2>&1 \
+            || awww img "$image" >/dev/null 2>&1 \
+            || warn "awww не смог применить обои"
+        return 0
+    fi
+
+    if command -v swww >/dev/null 2>&1; then
+        if ! swww query >/dev/null 2>&1; then
+            if command -v swww-daemon >/dev/null 2>&1; then
+                nohup swww-daemon >/dev/null 2>&1 &
+                for _ in $(seq 1 40); do
+                    swww query >/dev/null 2>&1 && break
+                    sleep 0.1
+                done
+            fi
+        fi
+        swww img --transition-type grow --transition-duration 0.8 "$image" >/dev/null 2>&1 \
+            || swww img "$image" >/dev/null 2>&1 \
+            || warn "swww не смог применить обои"
+        return 0
+    fi
+
+    if command -v swaybg >/dev/null 2>&1; then
+        pkill -x swaybg >/dev/null 2>&1 || true
+        nohup swaybg -i "$image" -m fill >/dev/null 2>&1 &
+        return 0
+    fi
+
+    warn "не найден awww/swww/swaybg — обои не применены"
+}
+
+# ---------------------------------------------------------------------------
+# Matugen
+# ---------------------------------------------------------------------------
+
+theme_mode() {
+    local mode
+    mode="$(get themeMode)"
+    [[ "$mode" == "light" ]] && printf 'light\n' || printf 'dark\n'
+}
+
+generate_ghostty() {
+    local json="$1"
+    local dir="$CONFIG_HOME/ghostty/themes"
+    [[ -d "$CONFIG_HOME/ghostty" ]] || return 0
+
+    mkdir -p "$dir"
+    local tmp
+    tmp="$(mktemp "$dir/.stylish.XXXXXX")"
+
+    if ! jq -r --arg mode "$(theme_mode)" '
+        .colors as $c | .base16 as $b |
+        def c($key): $c[$key][$mode].color;
+        def b($key): $b[$key][$mode].color;
+        ([
+            "background = \(c("background"))",
+            "foreground = \(c("on_background"))",
+            "cursor-color = \(c("primary"))",
+            "cursor-text = \(c("on_primary"))",
+            "selection-background = \(c("primary_container"))",
+            "selection-foreground = \(c("on_primary_container"))"
+        ]
+        + [range(0; 16) as $i |
+            (["base00","base01","base02","base03","base04","base05","base06","base07",
+              "base08","base09","base0a","base0b","base0c","base0d","base0e","base0f"][$i]) as $key |
+            "palette = \($i)=\(b($key))"]
+        ) | join("\n")
+    ' <<<"$json" >"$tmp"; then
+        rm -f "$tmp"
+        warn "не удалось сгенерировать тему Ghostty"
+        return 0
+    fi
+
+    mv "$tmp" "$dir/stylish"
+}
+
+generate_ski() {
+    local json="$1"
+    local dir="$STATE_HOME/ski/themes"
+    [[ -d "$CONFIG_HOME/ski" || -d "$STATE_HOME/ski" ]] || return 0
+
+    mkdir -p "$dir"
+    local tmp
+    tmp="$(mktemp "$dir/.stylish.XXXXXX")"
+
+    if ! jq --arg mode "$(theme_mode)" '
+        .colors as $c | .base16 as $b |
+        def c($key): $c[$key][$mode].color;
+        def b($key): $b[$key][$mode].color;
+        {
+            name: "Stylish",
+            light: ($mode == "light"),
+            base: c("background"),
+            mantle: c("surface_container_low"),
+            crust: c("surface_container"),
+            text: c("on_surface"),
+            subtext0: c("on_surface_variant"),
+            subtext1: c("outline"),
+            surface0: c("surface_container_lowest"),
+            surface1: c("surface_container_high"),
+            surface2: c("surface_container_highest"),
+            accent: c("primary"),
+            peach: b("base09"),
+            green: b("base0b"),
+            red: c("error"),
+            yellow: b("base0a")
+        }
+    ' <<<"$json" >"$tmp"; then
+        rm -f "$tmp"
+        warn "не удалось сгенерировать тему Ski"
+        return 0
+    fi
+
+    mv "$tmp" "$dir/stylish.json"
+}
+
+generate_mango() {
+    local json="$1"
+    [[ -d "$CONFIG_HOME/mango" ]] || return 0
+
+    local mode bg outline primary
+    mode="$(theme_mode)"
+    mapfile -t values < <(jq -r --arg mode "$mode" '
+        .colors | [.background[$mode].color, .outline[$mode].color, .primary[$mode].color] | .[]
+    ' <<<"$json")
+    bg="${values[0]:-}"
+    outline="${values[1]:-}"
+    primary="${values[2]:-}"
+
+    local tmp
+    tmp="$(mktemp "$CONFIG_HOME/mango/.colors.XXXXXX")"
+    cat >"$tmp" <<EOF
+# Сгенерировано stylish-set-wallpaper. Не редактируйте вручную.
+root_color=0x${bg#\#}ff
+border_color=0x${outline#\#}ff
+focus_color=0x${primary#\#}ff
+EOF
+    mv "$tmp" "$CONFIG_HOME/mango/colors.conf"
+}
+
+
+generate_quickshell() {
+    local json="$1"
+    local dir="$CONFIG_HOME/stylish"
+    mkdir -p "$dir"
+    local tmp
+    tmp="$(mktemp "$dir/.matugen-colors.XXXXXX")"
+    if ! jq --arg mode "$(theme_mode)" '
+        .colors | with_entries(.value = .value[$mode].color)
+    ' <<<"$json" >"$tmp"; then
+        rm -f "$tmp"
+        warn "не удалось сгенерировать тему Quickshell"
+        return 0
+    fi
+    mv "$tmp" "$dir/matugen-colors.json"
+}
+generate_palette() {
+    command -v matugen >/dev/null 2>&1 || {
+        warn "matugen не установлен — палитра не обновлена"
+        return 0
+    }
+
+    local scheme
+    scheme="$(get matugenScheme)"
+    [[ -n "$scheme" ]] || scheme="scheme-tonal-spot"
+
+    local json
+    if ! json="$(matugen image "$target" -m dark -t "$scheme" \
+            --prefer saturation -j hex 2>/dev/null)"; then
+        warn "matugen не смог разобрать изображение: $target"
+        return 0
+    fi
+
+    local dark light primary
+    dark="$(jq -c '.colors | with_entries(.value = .value.dark.color)' <<<"$json")"
+    light="$(jq -c '.colors | with_entries(.value = .value.light.color)' <<<"$json")"
+    primary="$(jq -r '.colors.primary.dark.color // empty' <<<"$json")"
+
+    [[ -n "$dark" && "$dark" != "null" ]] || {
+        warn "matugen вернул пустую палитру"
+        return 0
+    }
+
+    local tmp
+    tmp="$(mktemp "${SETTINGS}.XXXXXX")"
+    if ! jq --argjson dark "$dark" --argjson light "$light" \
+            --arg accent "$primary" '
+        .matugenColors = $dark
+        | .matugenColorsLight = $light
+        | if $accent != "" then .accent = $accent else . end
+    ' "$SETTINGS" >"$tmp"; then
+        rm -f "$tmp"
+        warn "не удалось обновить $SETTINGS"
+        return 0
+    fi
+    mv "$tmp" "$SETTINGS"
+
+    generate_ghostty "$json"
+    generate_ski "$json"
+    generate_mango "$json"
+    generate_quickshell "$json"
+}
+
+save_wallpaper_path() {
+    [[ "$mode" == "refresh" ]] && return 0
+
+    local current_saved tmp
+    current_saved="$(get wallpaper)"
+    [[ "$current_saved" == "$target" ]] && return 0
+
+    tmp="$(mktemp "${SETTINGS}.XXXXXX")"
+    if ! jq --arg wallpaper "$target" '.wallpaper = $wallpaper' \
+            "$SETTINGS" >"$tmp"; then
+        rm -f "$tmp"
+        warn "не удалось записать путь обоев в $SETTINGS"
+        return 0
+    fi
+    mv "$tmp" "$SETTINGS"
+}
+
+# ---------------------------------------------------------------------------
+# main
+# ---------------------------------------------------------------------------
+
+if $apply_wallpaper; then
+    apply_image "$target"
+    if [[ "$mode" != "refresh" ]]; then
+        printf 'Обои: %s\n' "$target"
+    fi
+fi
+
+save_wallpaper_path
+
+use_matugen="$(get useMatugen)"
+if [[ "$mode" == "refresh" || "$use_matugen" == "true" ]]; then
+    generate_palette
+fi
+
+printf '%s\n' "$target"

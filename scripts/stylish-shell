@@ -1,0 +1,245 @@
+#!/usr/bin/env bash
+# stylish-shell — управление оболочкой Quickshell.
+#
+#   stylish-shell                 запустить оболочку (если ещё не запущена)
+#   stylish-shell start|stop      запустить / остановить
+#   stylish-shell restart         перезапустить
+#   stylish-shell reload          перезагрузить QML без выхода из сессии
+#   stylish-shell toggle <panel>  открыть/закрыть панель
+#   stylish-shell open <panel>    открыть панель
+#   stylish-shell close           закрыть панель
+#   stylish-shell lock            заблокировать экран
+#   stylish-shell volume up|down|mute
+#   stylish-shell mic             включить/выключить микрофон
+#   stylish-shell brightness up|down
+#   stylish-shell wallpaper-refresh  пересчитать палитру из текущих обоев
+#   stylish-shell status          показать состояние
+#   stylish-shell ipc ...         передать команду в `qs ipc` напрямую
+
+set -euo pipefail
+
+CONFIG_NAME="stylish"
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+REPO_DIR="$(cd -- "$SCRIPT_DIR/.." && pwd)"
+QS_BIN="${QS_BIN:-qs}"
+
+CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+INSTALLED_CONFIG="$CONFIG_HOME/quickshell/$CONFIG_NAME/shell.qml"
+DEV_CONFIG="$REPO_DIR/quickshell/shell.qml"
+
+if [[ -f "$INSTALLED_CONFIG" ]]; then
+    QS_ARGS=(-c "$CONFIG_NAME")
+    CONFIG_PATH="$INSTALLED_CONFIG"
+else
+    QS_ARGS=(-p "$REPO_DIR/quickshell")
+    CONFIG_PATH="$DEV_CONFIG"
+fi
+
+RUNTIME_DIR="${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/stylish-shell-${UID}"
+mkdir -p "$RUNTIME_DIR"
+PID_FILE="$RUNTIME_DIR/shell.pid"
+LOG_FILE="$RUNTIME_DIR/shell.log"
+
+# ---------------------------------------------------------------------------
+# helpers
+# ---------------------------------------------------------------------------
+
+die() {
+    printf 'stylish-shell: %s\n' "$*" >&2
+    exit 1
+}
+
+command -v "$QS_BIN" >/dev/null 2>&1 \
+    || die "не найден $QS_BIN. Установите quickshell: sudo pacman -S quickshell"
+
+pid_alive() {
+    local pid="${1:-}"
+    [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null
+}
+
+running_pid() {
+    local pid=""
+
+    if [[ -f "$PID_FILE" ]]; then
+        pid="$(<"$PID_FILE")"
+        if pid_alive "$pid"; then
+            printf '%s\n' "$pid"
+            return 0
+        fi
+    fi
+
+    if command -v "$QS_BIN" >/dev/null 2>&1; then
+        pid="$("$QS_BIN" list --all 2>/dev/null | awk -v target="$CONFIG_PATH" '
+            /^[[:space:]]*Process ID:/ { pid = $3 }
+            /^[[:space:]]*Config path:/ {
+                path = $0
+                sub(/^[[:space:]]*Config path:[[:space:]]*/, "", path)
+                if (path == target) { print pid; exit }
+            }
+        ')"
+    fi
+
+    if pid_alive "$pid"; then
+        printf '%s\n' "$pid" >"$PID_FILE"
+        printf '%s\n' "$pid"
+        return 0
+    fi
+
+    return 1
+}
+
+wait_for_ipc() {
+    local i
+    for i in $(seq 1 80); do
+        if "$QS_BIN" "${QS_ARGS[@]}" ipc show >/dev/null 2>&1; then
+            return 0
+        fi
+        sleep 0.1
+    done
+    return 1
+}
+
+start_shell() {
+    if running_pid >/dev/null; then
+        return 0
+    fi
+
+    [[ -f "$CONFIG_PATH" ]] || die "не найден $CONFIG_PATH"
+
+    : >"$LOG_FILE"
+    nohup "$QS_BIN" "${QS_ARGS[@]}" >>"$LOG_FILE" 2>&1 &
+    local pid=$!
+    printf '%s\n' "$pid" >"$PID_FILE"
+
+    sleep 0.2
+    if ! pid_alive "$pid"; then
+        tail -n 40 "$LOG_FILE" >&2 || true
+        rm -f "$PID_FILE"
+        die "оболочка не запустилась (лог: $LOG_FILE)"
+    fi
+
+    wait_for_ipc || true
+}
+
+stop_shell() {
+    "$QS_BIN" "${QS_ARGS[@]}" kill >/dev/null 2>&1 || true
+
+    if [[ -f "$PID_FILE" ]]; then
+        local pid
+        pid="$(<"$PID_FILE")"
+        if pid_alive "$pid"; then
+            kill "$pid" 2>/dev/null || true
+            for _ in $(seq 1 30); do
+                pid_alive "$pid" || break
+                sleep 0.1
+            done
+            pid_alive "$pid" && kill -9 "$pid" 2>/dev/null || true
+        fi
+        rm -f "$PID_FILE"
+    fi
+}
+
+ensure_ipc() {
+    start_shell
+    wait_for_ipc || die "IPC оболочки недоступен. Лог: $LOG_FILE"
+}
+
+ipc() {
+    ensure_ipc
+    "$QS_BIN" "${QS_ARGS[@]}" ipc "$@"
+}
+
+usage() {
+    sed -n '2,18p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+}
+
+# ---------------------------------------------------------------------------
+# commands
+# ---------------------------------------------------------------------------
+
+command="${1:-start}"
+shift || true
+
+case "$command" in
+    start)
+        start_shell
+        ;;
+    stop|quit)
+        stop_shell
+        ;;
+    restart)
+        stop_shell
+        sleep 0.3
+        start_shell
+        ;;
+    reload)
+        ipc call shell reload
+        ;;
+    status)
+        if pid="$(running_pid)"; then
+            printf 'stylish-shell: запущена (pid %s)\n' "$pid"
+            printf 'конфиг: %s\n' "$CONFIG_PATH"
+            printf 'лог:    %s\n' "$LOG_FILE"
+        else
+            printf 'stylish-shell: не запущена\n'
+            printf 'конфиг: %s\n' "$CONFIG_PATH"
+            exit 1
+        fi
+        ;;
+    toggle|open)
+        [[ $# -ge 1 ]] || die "укажите панель: launcher, settings, network, clipboard, volume, control, music, wallpaper, time, power"
+        ipc call shell "$command" "$1"
+        ;;
+    close)
+        ipc call shell close
+        ;;
+    lock|lock-screen)
+        ipc call shell lockScreen
+        ;;
+    volume)
+        [[ $# -ge 1 ]] || die "использование: stylish-shell volume up|down|mute"
+        ipc call shell volume "$1"
+        ;;
+    mic)
+        ipc call shell mic
+        ;;
+    brightness)
+        [[ $# -ge 1 ]] || die "использование: stylish-shell brightness up|down"
+        ipc call shell brightness "$1"
+        ;;
+    osd)
+        [[ $# -ge 2 ]] || die "использование: stylish-shell osd <volume|brightness|mic> <процент>"
+        ipc call shell osd "$1" "$2"
+        ;;
+    power)
+        ipc call shell toggle power
+        ;;
+    wallpaper-refresh)
+        if [[ -x "$SCRIPT_DIR/stylish-set-wallpaper" ]]; then
+            exec "$SCRIPT_DIR/stylish-set-wallpaper" --refresh
+        elif command -v stylish-set-wallpaper >/dev/null 2>&1; then
+            exec stylish-set-wallpaper --refresh
+        else
+            die "не найден stylish-set-wallpaper"
+        fi
+        ;;
+    screenshot)
+        if [[ -x "$SCRIPT_DIR/stylish-screenshot" ]]; then
+            exec "$SCRIPT_DIR/stylish-screenshot" "$@"
+        elif command -v stylish-screenshot >/dev/null 2>&1; then
+            exec stylish-screenshot "$@"
+        else
+            die "не найден stylish-screenshot"
+        fi
+        ;;
+    ipc)
+        ensure_ipc
+        exec "$QS_BIN" "${QS_ARGS[@]}" ipc "$@"
+        ;;
+    -h|--help|help)
+        usage
+        ;;
+    *)
+        die "неизвестная команда: $command (stylish-shell --help)"
+        ;;
+esac

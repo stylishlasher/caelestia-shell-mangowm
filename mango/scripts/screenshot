@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+# screenshot        — область → файл + буфер обмена
+# screenshot full   — весь экран
+# screenshot edit   — область → открыть в satty для редактирования
+# (блюр/анимацию слоя выделения гасит layer_rule в config.conf)
+set -euo pipefail
+
+ENVF="$HOME/.config/mango/settings.env"
+[ -f "$ENVF" ] && . "$ENVF" 2>/dev/null || true
+ACCENT_HEX="${ACCENT:-cba6f7}"; ACCENT_HEX="${ACCENT_HEX#\#}"
+[[ "$ACCENT_HEX" =~ ^[0-9a-fA-F]{6}$ ]] || ACCENT_HEX="cba6f7"
+SLURP_COLOR="#${ACCENT_HEX}ff"
+SLURP_SEL="#${ACCENT_HEX}50"
+
+dir="$HOME/Pictures/Screenshots"
+mkdir -p "$dir"
+f="$dir/$(date +%F_%H-%M-%S).png"
+
+notify() { command -v notify-send >/dev/null 2>&1 && notify-send -t 2200 "Скриншот" "$1" 2>/dev/null || true; }
+
+case "${1:-}" in
+  full)
+    command -v grim >/dev/null 2>&1 || { echo "grim не найден" >&2; exit 1; }
+    grim "$f" || exit 1
+    wl-copy < "$f" 2>/dev/null || true
+    notify "Сохранён: $(basename "$f")"
+    ;;
+  edit|satty)
+    command -v grim >/dev/null 2>&1 || { echo "grim не найден" >&2; exit 1; }
+    command -v slurp >/dev/null 2>&1 || { echo "slurp не найден" >&2; exit 1; }
+    area=$(slurp -b '#00000000' -c "$SLURP_COLOR" -s "$SLURP_SEL" -w 2) || exit 0
+    sleep 0.15
+    grim -g "$area" "$f" || exit 1
+    if command -v satty >/dev/null 2>&1; then
+      # Открыть в редакторе satty (аннотации/обрезка/стрелки и т.д.)
+      satty --filename "$f" --output-filename "$f" --copy-command 'wl-copy' --early-exit >/dev/null 2>&1 \
+        || satty --filename "$f" --output-filename "$f" >/dev/null 2>&1 \
+        || satty --filename "$f" >/dev/null 2>&1 \
+        || true
+      wl-copy < "$f" 2>/dev/null || true
+      notify "Открыто в satty: $(basename "$f")"
+    else
+      wl-copy < "$f" 2>/dev/null || true
+      notify "satty не установлен, сохранено: $(basename "$f")"
+    fi
+    ;;
+  *)
+    command -v grim >/dev/null 2>&1 || { echo "grim не найден" >&2; exit 1; }
+    command -v slurp >/dev/null 2>&1 || { echo "slurp не найден" >&2; exit 1; }
+    area=$(slurp -b '#00000000' -c "$SLURP_COLOR" -s "$SLURP_SEL" -w 2) || exit 0
+    sleep 0.15
+    grim -g "$area" "$f" || exit 1
+    wl-copy < "$f" 2>/dev/null || true
+    notify "Сохранён: $(basename "$f")"
+    ;;
+esac
+
+exit 0

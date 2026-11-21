@@ -1,0 +1,4 @@
+module Caelestia.State
+singleton State 1.0 State.qml
+singleton ShellState 1.0 ShellState.qml
+ScreenState 1.0 ScreenState.qml

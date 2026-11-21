@@ -1,111 +1,29 @@
-# stylish-dots-nextgen
+# caelestia-shell-mangowm (WIP)
 
-Next-generation fork of **stylish-dots** for MangoWC: Waybar/fuzzel/bar-menu shell replaced with a **Quickshell**-based shell.
+**Work in progress.** Raw port of [Caelestia shell](https://github.com/caelestia-dots/shell) to MangoWM/MangoWC, replacing the previous custom Quickshell in `stylish-dots-nextgen`.
 
-## What changed
+## Status
 
-- **Panel**: Quickshell `Bar.qml` (tags via `mmsg`, layout, clock, tray, volume/network/battery, notifications, power).
-- **Menus/Popups**: Quickshell drop panels — launcher, settings, network/bluetooth, volume, control center, music, wallpaper picker, time/weather, clipboard, power.
-- **Desktop widgets**: Quickshell bottom-layer widgets — clock/date, weather, media player. Position and visibility configurable in Settings.
-- **Matugen integration**: `stylish-set-wallpaper` updates `~/.config/stylish/settings.json` with Matugen colors and writes `~/.config/stylish/matugen-colors.json`; Quickshell `Theme.qml` watches it. Matugen template also installed at `~/.config/matugen/templates/quickshell-colors.json`.
-- **MangoWC integration**: `mango/scripts/autostart.sh` starts `stylish-shell`; `mango/config.conf` routes keybinds to QS panels where appropriate, with fallbacks to legacy scripts.
+- Caelestia QML base imported and adapted with MangoWM compatibility shims.
+- Drawers/launcher/dashboard/OSD/bar partially work on live MangoWM session.
+- Many components still need MangoWM data/parity fixes (workspaces, active window, tray, notifications, settings binds, Matugen, lockscreen, background).
+- `Background {}` is currently disabled in `quickshell/shell.qml` due MangoWM crash - needs isolation/fix.
 
-## Requirements
+## Attribution / License
 
-- `mangowc` / `mmsg` (MangoWC IPC)
-- `quickshell` (0.3+)
-- `jq`, `curl`, `python3`, `bash`
-- `matugen` (optional, for wallpaper palette generation)
-- `grim`, `slurp`, `wl-copy` (screenshots/clipboard)
-- `cliphist`, `wl-paste` (clipboard history)
-- `nmcli` / NetworkManager, `bluez` (network/bluetooth panels)
-- `pipewire`, `wpctl` / PipeWire services
-- `brightnessctl` (optional)
-- `playerctl` / MPRIS players (optional)
+- Original Caelestia shell: https://github.com/caelestia-dots/shell
+- Caelestia/Quickshell components are licensed under **GPL-3.0** (see `LICENSE` and `quickshell/CAELESTIA-LICENSE`).
+- This fork/adaptation: stylishlasher/stylish-dots-nextgen contributors, MangoWM integration changes.
 
-## Install
-
-```bash
-git clone git@github.com:stylishlasher/stylish-dots-nextgen.git
-cd stylish-dots-nextgen
-# copy quickshell config
-mkdir -p ~/.config/quickshell
-cp -a quickshell ~/.config/quickshell/stylish
-# scripts
-mkdir -p ~/.local/bin
-cp -a scripts/stylish-shell scripts/stylish-set-wallpaper scripts/stylish-screenshot ~/.local/bin/
-chmod +x ~/.local/bin/stylish-*
-# mango integration (review before overwriting)
-cp -a mango ~/.config/
-cp -a matugen ~/.config/
-```
-
-Or symlink for development:
+## Live install (dev)
 
 ```bash
 ln -sfn "$PWD/quickshell" ~/.config/quickshell/stylish
-```
-
-## Usage
-
-```bash
-stylish-shell start|stop|restart|reload|status
-stylish-shell toggle launcher
-stylish-shell toggle settings
-stylish-shell toggle power
-stylish-shell toggle wallpaper
-stylish-shell volume up|down|mute
-stylish-shell brightness up|down
-
-# Обновление
-stylish-shell update --check   # проверить, есть ли обновления
-stylish-shell update           # обновить репозиторий и установить файлы
-stylish-update --check         # то же самое напрямую
-stylish-update                 # обновить, установить, перезагрузить shell
-```
-
-IPC target: `qs -c stylish ipc call shell toggle <panel>`.
-
-Panels: `launcher`, `settings`, `network`, `clipboard`, `volume`, `control`, `music`, `wallpaper`, `time`, `power`.
-
-## Desktop widgets
-
-Configured in Settings -> Widgets:
-- Desktop clock/date
-- Desktop weather
-- Desktop media widget
-- Widget position: top-left/top-right/bottom-left/bottom-right
-
-## Обновление
-
-Скрипт `scripts/stylish-update` (устанавливается как `~/.local/bin/stylish-update`) делает:
-
-1. `git fetch` и проверяет `origin/<current-branch>`.
-2. Если есть обновления — выполняет `git pull --ff-only` (только при чистом рабочем дереве).
-3. Копирует `quickshell/` в `~/.config/quickshell/stylish`.
-4. Устанавливает скрипты в `~/.local/bin`.
-5. Обновляет шаблоны Matugen и конфиг Mango (для Mango создаётся бэкап в `~/.config/mango/.backup-stylish-update-*`).
-6. Перезагружает shell (`stylish-shell reload`/`restart`), если не передан `--no-reload`.
-
-Команды:
-
-```bash
-stylish-shell update --check
-stylish-shell update
-stylish-update --check
-stylish-update --no-reload
-stylish-update --repo /path/to/stylish-dots-nextgen
+mkdir -p ~/.local/bin
+cp -a scripts/stylish-shell ~/.local/bin/
+stylish-shell restart
 ```
 
 ## Notes
 
-- `mango/scripts/launch settings` and `launcher` prefer Quickshell panels and fall back to legacy `mango-settings`/`fuzzel`.
-- `mango/scripts/power-menu` and `wallpaper-pick` also prefer Quickshell panels.
-- Legacy Waybar/dock scripts remain in `mango/scripts` for reference/fallback, but autostart now starts `stylish-shell`.
-- Quickshell DesktopEntries singleton wraps `Quickshell.DesktopEntries`; if your Quickshell build exposes a different API, adjust `quickshell/singletons/DesktopEntries.qml`.
-
-
-## Авторство и вдохновение
-
-- Основа: [stylishlasher/stylish-dots](https://github.com/stylishlasher/stylish-dots)
-- Идеи и референсы UI/модулей: [ilyamiro/serpantinum](https://github.com/ilyamiro/serpantinum), [Caelestia-Shell](https://github.com/caelestia-dots/shell)
+This is a raw checkpoint before system reinstall. Expect rough edges and incomplete MangoWM parity.

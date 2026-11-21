@@ -71,6 +71,10 @@ detect_config() {
 
 detect_config
 
+# Caelestia/MangoWM port uses local QML modules (Caelestia, qs compat, M3Shapes).
+CONFIG_DIR="$(dirname "$CONFIG_PATH")"
+export QML2_IMPORT_PATH="$CONFIG_DIR${QML2_IMPORT_PATH:+:$QML2_IMPORT_PATH}"
+
 RUNTIME_DIR="${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/stylish-shell-${UID}"
 mkdir -p "$RUNTIME_DIR"
 PID_FILE="$RUNTIME_DIR/shell.pid"

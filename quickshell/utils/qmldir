@@ -1,0 +1,8 @@
+module qs.utils
+singleton Icons 1.0 Icons.qml
+singleton Paths 1.0 Paths.qml
+singleton Strings 1.0 Strings.qml
+singleton Units 1.0 Units.qml
+Lib 1.0 Lib.qml
+Searcher 1.0 Searcher.qml
+singleton Images 1.0 Images.qml

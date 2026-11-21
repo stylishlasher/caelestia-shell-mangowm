@@ -1,369 +1,65 @@
+//@ pragma Env QS_CRASHREPORT_URL=https://github.com/caelestia-dots/shell/issues/new?template=crash.yml
+//@ pragma DefaultEnv QS_NO_RELOAD_POPUP=1
+//@ pragma DefaultEnv QS_DROP_EXPENSIVE_FONTS=1
+//@ pragma DefaultEnv QSG_RENDER_LOOP=threaded
+//@ pragma DefaultEnv QT_QUICK_FLICKABLE_WHEEL_DECELERATION=10000
+
 import QtQuick
 import Quickshell
-import Quickshell.Io
-import Quickshell.Wayland
-import Quickshell.Services.Pipewire
-import "singletons"
-import "components"
-import "panels"
+import Caelestia.Config
+import Caelestia.State
+import qs.services
+import qs.modules.areapicker
+import qs.modules.background
+import qs.modules.drawers
+import qs.modules.lock
+import qs.daemons
+import qs.daemons as Daemons
 
 ShellRoot {
-    id: shell
+    id: root
 
-    function screenTarget() {
-        if (Mango.focusedName.length > 0)
-            return Mango.focusedName;
-        if (Quickshell.screens.length > 0)
-            return Quickshell.screens[0].name;
-        return "";
+    settings.watchFiles: false
+
+    Component.onCompleted: {
+        // Force certain singletons to load on shell init instead of lazily
+        Notifs;
+        Players;
+        Brightness;
+        Weather.reload();
+
+        if (GlobalConfig.utilities.vpn.enabled)
+            VPN;
     }
 
-    function clampVolume(value) {
-        return Math.max(0, Math.min(1.5, value));
+    FontLoader {
+        source: Quickshell.shellPath("assets/google-sans-flex/GoogleSansFlex-VariableFont_GRAD,ROND,opsz,slnt,wdth,wght.ttf")
+    }
+    FontLoader {
+        source: Quickshell.shellPath("assets/fonts/MaterialSymbolsRounded.ttf")
     }
 
-    function changeVolume(step) {
-        const sink = Pipewire.defaultAudioSink;
-        if (!sink || !sink.audio)
-            return;
-        sink.audio.volume = shell.clampVolume(sink.audio.volume + step);
-        if (sink.audio.volume > 0.001)
-            sink.audio.muted = false;
-        Ui.showOsd("volume", sink.audio.volume * 100, sink.audio.muted);
+    Binding {
+        target: ShellState
+        property: "shellRoot"
+        value: root
     }
 
-    function reloadShell() {
-        Quickshell.reload(false);
-    }
-
-    // Bar -------------------------------------------------------------------
-    Variants {
-        model: Quickshell.screens
-
-        Bar {
-            modelData: modelData
-        }
-    }
-
-    // Dock ------------------------------------------------------------------
-    Variants {
-        model: Quickshell.screens
-
-        Dock {
-            modelData: modelData
-        }
-    }
-
-    // Desktop widgets -------------------------------------------------------
-    Variants {
-        model: Quickshell.screens
-
-        DesktopWidgets {
-            modelData: modelData
-        }
-    }
-
-    // Desktop double-right-click: fullscreen bottom layer, only right-button is accepted.
-    Variants {
-        model: Quickshell.screens
-
-        PanelWindow {
-            required property var modelData
-            screen: modelData
-            color: "transparent"
-            focusable: false
-            exclusionMode: ExclusionMode.Ignore
-            exclusiveZone: 0
-            anchors { top: true; bottom: true; left: true; right: true }
-            WlrLayershell.layer: WlrLayer.Bottom
-            WlrLayershell.namespace: "stylish-desktop-rightclick"
-
-            Timer { id: rightClickTimer; interval: 350 }
-            MouseArea {
-                anchors.fill: parent
-                acceptedButtons: Qt.RightButton
-                propagateComposedEvents: true
-                onClicked: mouse => {
-                    if (rightClickTimer.running) {
-                        rightClickTimer.stop();
-                        Ui.open("settings", modelData ? String(modelData.name) : shell.screenTarget());
-                        Ui.desktopEditRequest++;
-                    } else {
-                        rightClickTimer.restart();
-                    }
-                    mouse.accepted = true;
-                }
-            }
-        }
-    }
-
-    // Top hover dashboard trigger -------------------------------------------
-    Variants {
-        model: Quickshell.screens
-
-        PanelWindow {
-            required property var modelData
-            screen: modelData
-            visible: Settings.data.barEnabled
-            color: "transparent"
-            focusable: false
-            exclusionMode: ExclusionMode.Ignore
-            exclusiveZone: 0
-            implicitHeight: 6
-            anchors { top: true; left: true; right: true }
-            margins { left: 200; right: 200 }
-            WlrLayershell.layer: WlrLayer.Overlay
-            WlrLayershell.namespace: "stylish-dashboard-trigger"
-
-            MouseArea {
-                anchors.fill: parent
-                hoverEnabled: true
-                onEntered: Ui.open("dashboard", modelData ? String(modelData.name) : "")
-                onExited: closeTimer.restart()
-            }
-            Timer { id: closeTimer; interval: 500; onTriggered: { if (Ui.panel === "dashboard") Ui.close(); } }
-        }
-    }
-
-    // Wallpaper transition overlay ------------------------------------------
-    Variants {
-        model: Quickshell.screens
-
-        PanelWindow {
-            id: wpOverlay
-            required property var modelData
-            screen: modelData
-            visible: Ui.wallpaperTransition > 0.01
-            color: Utils.alpha(Theme.bg, Ui.wallpaperTransition * 0.85)
-            focusable: false
-            exclusionMode: ExclusionMode.Ignore
-            exclusiveZone: 0
-            anchors { top: true; bottom: true; left: true; right: true }
-            WlrLayershell.layer: WlrLayer.Overlay
-            WlrLayershell.namespace: "stylish-wallpaper-transition"
-
-            Image {
-                anchors.fill: parent
-                source: Ui.wallpaperTransitionImage.length > 0 ? "file://" + Ui.wallpaperTransitionImage : ""
-                fillMode: Image.PreserveAspectCrop
-                opacity: Ui.wallpaperTransition
-                asynchronous: true
-            }
-        }
-    }
-
-    // Drop-down panels ------------------------------------------------------
-    Variants {
-        model: Quickshell.screens
-
-        LauncherPanel {
-            modelData: modelData
-        }
-    }
-
-    Variants {
-        model: Quickshell.screens
-
-        SettingsPanel {
-            modelData: modelData
-        }
-    }
-
-    Variants {
-        model: Quickshell.screens
-
-        NetworkPanel {
-            modelData: modelData
-        }
-    }
-
-    Variants {
-        model: Quickshell.screens
-
-        ClipboardPanel {
-            modelData: modelData
-        }
-    }
-
-    Variants {
-        model: Quickshell.screens
-
-        VolumePanel {
-            modelData: modelData
-        }
-    }
-
-    Variants {
-        model: Quickshell.screens
-
-        AudioPanel {
-            modelData: modelData
-        }
-    }
-
-    Variants {
-        model: Quickshell.screens
-
-        ControlCenterPanel {
-            modelData: modelData
-        }
-    }
-
-    Variants {
-        model: Quickshell.screens
-
-        MusicPanel {
-            modelData: modelData
-        }
-    }
-
-    Variants {
-        model: Quickshell.screens
-
-        WallpaperPanel {
-            modelData: modelData
-        }
-    }
-
-    Variants {
-        model: Quickshell.screens
-
-        TimeWeatherPanel {
-            modelData: modelData
-        }
-    }
-
-    Variants {
-        model: Quickshell.screens
-
-        PowerPanel {
-            modelData: modelData
-        }
-    }
-
-    // Popups and OSD --------------------------------------------------------
-
-    Variants {
-        model: Quickshell.screens
-
-        NotificationPopups {
-            modelData: modelData
-        }
-    }
-
-    Variants {
-        model: Quickshell.screens
-
-        DashboardPanel {
-            modelData: modelData
-        }
-    }
-
-    Variants {
-        model: Quickshell.screens
-
-        NotificationPanel {
-            modelData: modelData
-        }
-    }
-
-    Variants {
-        model: Quickshell.screens
-
-        Osd {
-            modelData: modelData
-        }
-    }
-
-    // Lock ------------------------------------------------------------------
-    WlSessionLock {
+    // Modules
+    // Background {} // TODO: crashes on MangoWM compat
+    Drawers {}
+    AreaPicker {}
+    Lock {
         id: lock
-        locked: Ui.locked
-
-        surface: Component {
-            LockScreen {}
-        }
     }
 
-    // IPC -------------------------------------------------------------------
-    IpcHandler {
-        target: "shell"
-
-        function toggle(name: string): void {
-            Ui.toggle(name, shell.screenTarget());
-        }
-
-        function open(name: string): void {
-            Ui.open(name, shell.screenTarget());
-        }
-
-        function close(): void {
-            Ui.close();
-        }
-
-        function reload(): void {
-            shell.reloadShell();
-        }
-
-        function volume(action: string): void {
-            const sink = Pipewire.defaultAudioSink;
-            if (!sink || !sink.audio)
-                return;
-            if (action === "up") {
-                shell.changeVolume(0.05);
-            } else if (action === "down") {
-                shell.changeVolume(-0.05);
-            } else if (action === "mute") {
-                sink.audio.muted = !sink.audio.muted;
-                Ui.showOsd("volume", sink.audio.volume * 100, sink.audio.muted);
-            } else if (action.indexOf("set:") === 0) {
-                const value = parseFloat(action.slice(4));
-                if (!isNaN(value)) {
-                    sink.audio.volume = shell.clampVolume(value / 100);
-                    sink.audio.muted = false;
-                    Ui.showOsd("volume", sink.audio.volume * 100, false);
-                }
-            }
-        }
-
-        function mic(): void {
-            const source = Pipewire.defaultAudioSource;
-            if (!source || !source.audio)
-                return;
-            source.audio.muted = !source.audio.muted;
-            Ui.showOsd("mic", source.audio.volume * 100, source.audio.muted);
-        }
-
-        function brightness(action: string): void {
-            if (action === "up") {
-                Brightness.up(5);
-            } else if (action === "down") {
-                Brightness.down(5);
-            } else if (action.indexOf("set:") === 0) {
-                const value = parseFloat(action.slice(4));
-                if (!isNaN(value))
-                    Brightness.setLevel(value);
-            }
-            Ui.showOsd("brightness", Brightness.level, false);
-        }
-
-        function osd(kind: string, percent: int): void {
-            Ui.showOsd(kind, percent, false);
-        }
-
-        function lockScreen(): void {
-            Ui.close();
-            Ui.lock();
-        }
-
-        function wallpaper(): void {
-            Ui.toggle("wallpaper", shell.screenTarget());
-        }
-
-        function power(): void {
-            Ui.toggle("power", shell.screenTarget());
-        }
+    // Daemons
+    MangoCompat {}
+    Shortcuts {}
+    BatteryMonitor {}
+    GameMode {}
+    IdleInhibit {}
+    IdleMonitors {
+        lock: lock
     }
-
-    Component.onCompleted: Brightness.refresh()
 }

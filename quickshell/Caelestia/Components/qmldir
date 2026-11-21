@@ -1,0 +1,11 @@
+module Caelestia.Components
+LazyListView 1.0 LazyListView.qml
+RoundedMask 1.0 RoundedMask.qml
+MaterialShape 1.0 MaterialShape.qml
+CircularIndicatorManager 1.0 CircularIndicatorManager.qml
+LinearIndicatorManager 1.0 LinearIndicatorManager.qml
+WavyLine 1.0 WavyLine.qml
+VisualiserBars 1.0 VisualiserBars.qml
+ButtonRow 1.0 ButtonRow.qml
+SparklineItem 1.0 SparklineItem.qml
+PageBase 1.0 PageBase.qml

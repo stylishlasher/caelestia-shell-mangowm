@@ -1,0 +1,4 @@
+module Caelestia
+singleton CUtils 1.0 CUtils.qml
+singleton Toaster 1.0 Toaster.qml
+singleton Requests 1.0 Requests.qml

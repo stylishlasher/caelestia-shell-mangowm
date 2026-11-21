@@ -1,0 +1,5 @@
+module Caelestia.Blobs
+BlobGroup 1.0 BlobGroup.qml
+BlobInvertedRect 1.0 BlobInvertedRect.qml
+BlobRect 1.0 BlobRect.qml
+BlobMask 1.0 BlobMask.qml

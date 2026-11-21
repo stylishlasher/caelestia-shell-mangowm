@@ -13,6 +13,8 @@
 #   stylish-shell mic             включить/выключить микрофон
 #   stylish-shell brightness up|down
 #   stylish-shell wallpaper-refresh  пересчитать палитру из текущих обоев
+#   stylish-shell update          обновить stylish-dots-nextgen
+#   stylish-shell update --check  проверить наличие обновлений
 #   stylish-shell status          показать состояние
 #   stylish-shell ipc ...         передать команду в `qs ipc` напрямую
 
@@ -221,6 +223,15 @@ case "$command" in
             exec stylish-set-wallpaper --refresh
         else
             die "не найден stylish-set-wallpaper"
+        fi
+        ;;
+    update)
+        if [[ -x "$SCRIPT_DIR/stylish-update" ]]; then
+            exec "$SCRIPT_DIR/stylish-update" "$@"
+        elif command -v stylish-update >/dev/null 2>&1; then
+            exec stylish-update "$@"
+        else
+            die "не найден stylish-update"
         fi
         ;;
     screenshot)

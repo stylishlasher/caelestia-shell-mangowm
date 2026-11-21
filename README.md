@@ -56,6 +56,12 @@ stylish-shell toggle power
 stylish-shell toggle wallpaper
 stylish-shell volume up|down|mute
 stylish-shell brightness up|down
+
+# Обновление
+stylish-shell update --check   # проверить, есть ли обновления
+stylish-shell update           # обновить репозиторий и установить файлы
+stylish-update --check         # то же самое напрямую
+stylish-update                 # обновить, установить, перезагрузить shell
 ```
 
 IPC target: `qs -c stylish ipc call shell toggle <panel>`.
@@ -69,6 +75,27 @@ Configured in Settings -> Widgets:
 - Desktop weather
 - Desktop media widget
 - Widget position: top-left/top-right/bottom-left/bottom-right
+
+## Обновление
+
+Скрипт `scripts/stylish-update` (устанавливается как `~/.local/bin/stylish-update`) делает:
+
+1. `git fetch` и проверяет `origin/<current-branch>`.
+2. Если есть обновления — выполняет `git pull --ff-only` (только при чистом рабочем дереве).
+3. Копирует `quickshell/` в `~/.config/quickshell/stylish`.
+4. Устанавливает скрипты в `~/.local/bin`.
+5. Обновляет шаблоны Matugen и конфиг Mango (для Mango создаётся бэкап в `~/.config/mango/.backup-stylish-update-*`).
+6. Перезагружает shell (`stylish-shell reload`/`restart`), если не передан `--no-reload`.
+
+Команды:
+
+```bash
+stylish-shell update --check
+stylish-shell update
+stylish-update --check
+stylish-update --no-reload
+stylish-update --repo /path/to/stylish-dots-nextgen
+```
 
 ## Notes
 

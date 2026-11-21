@@ -1,0 +1,104 @@
+#!/usr/bin/env bash
+# stylish-update — обновление stylish-dots-nextgen.
+#
+#   stylish-update             обновить репозиторий и установить файлы
+#   stylish-update --check     только проверить наличие обновлений
+#   stylish-update --no-reload не перезагружать shell после обновления
+#   stylish-update --repo DIR  использовать указанный локальный репозиторий
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+DEFAULT_REPO="$(cd -- "$SCRIPT_DIR/.." && pwd)"
+CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+REPO_DIR="$DEFAULT_REPO"
+CHECK_ONLY=false
+DO_RELOAD=true
+
+die() { printf 'stylish-update: %s\n' "$*" >&2; exit 1; }
+info() { printf 'stylish-update: %s\n' "$*"; }
+
+usage() { sed -n '2,7p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --check) CHECK_ONLY=true; shift ;;
+    --no-reload) DO_RELOAD=false; shift ;;
+    --repo) REPO_DIR="${2:-}"; [[ -n "$REPO_DIR" ]] || die "нужен путь после --repo"; shift 2 ;;
+    -h|--help|help) usage; exit 0 ;;
+    *) die "неизвестный аргумент: $1" ;;
+  esac
+done
+
+[[ -d "$REPO_DIR/.git" ]] || die "не найден git-репозиторий: $REPO_DIR"
+command -v git >/dev/null 2>&1 || die "нужен git"
+
+cd "$REPO_DIR"
+branch="$(git branch --show-current 2>/dev/null || true)"
+[[ -n "$branch" ]] || die "не удалось определить ветку"
+
+git fetch origin "$branch" >/dev/null 2>&1 || die "не удалось получить обновления из origin/$branch"
+local_rev="$(git rev-parse HEAD)"
+remote_rev="$(git rev-parse "origin/$branch")"
+
+if [[ "$local_rev" == "$remote_rev" ]]; then
+  info "уже актуально ($branch @ ${local_rev:0:7})"
+  exit 0
+fi
+
+info "доступно обновление: ${local_rev:0:7} -> ${remote_rev:0:7}"
+$CHECK_ONLY && exit 0
+
+# Обновляем только если рабочее дерево чистое, чтобы не затереть локальные правки.
+if [[ -n "$(git status --porcelain --untracked-files=no)" ]]; then
+  die "рабочее дерево имеет локальные изменения; закоммитьте/уберите их или обновите вручную"
+fi
+
+git pull --ff-only origin "$branch"
+info "репозиторий обновлён"
+
+# Установка файлов
+mkdir -p "$CONFIG_HOME/quickshell" "$CONFIG_HOME/stylish" "$HOME/.local/bin"
+
+# Quickshell config
+rm -rf "$CONFIG_HOME/quickshell/stylish"
+cp -a "$REPO_DIR/quickshell" "$CONFIG_HOME/quickshell/stylish"
+
+# Scripts
+install -m 0755 "$REPO_DIR/scripts/stylish-shell" "$HOME/.local/bin/stylish-shell"
+install -m 0755 "$REPO_DIR/scripts/stylish-set-wallpaper" "$HOME/.local/bin/stylish-set-wallpaper"
+install -m 0755 "$REPO_DIR/scripts/stylish-screenshot" "$HOME/.local/bin/stylish-screenshot"
+install -m 0755 "$REPO_DIR/scripts/stylish-update" "$HOME/.local/bin/stylish-update"
+
+# Matugen templates/config (не трогаем пользовательские settings.json/colors вне шаблонов)
+mkdir -p "$CONFIG_HOME/matugen/templates"
+if [[ -d "$REPO_DIR/matugen" ]]; then
+  cp -a "$REPO_DIR/matugen/templates/." "$CONFIG_HOME/matugen/templates/" 2>/dev/null || true
+  [[ -f "$REPO_DIR/matugen/config.toml" ]] && cp -f "$REPO_DIR/matugen/config.toml" "$CONFIG_HOME/matugen/config.toml"
+fi
+
+# Mango integration: копируем только если пользователь уже использует mango-конфиг из репо/хочет обновить.
+# По умолчанию обновляем скрипты и конфиг mango, но оставляем бэкап.
+if [[ -d "$REPO_DIR/mango" ]]; then
+  mkdir -p "$CONFIG_HOME/mango"
+  ts="$(date +%Y%m%d-%H%M%S)"
+  backup="$CONFIG_HOME/mango/.backup-stylish-update-$ts"
+  mkdir -p "$backup"
+  cp -a "$CONFIG_HOME/mango/." "$backup/" 2>/dev/null || true
+  cp -a "$REPO_DIR/mango/." "$CONFIG_HOME/mango/"
+  info "конфиг mango обновлён, бэкап: $backup"
+fi
+
+info "файлы установлены в ~/.config/quickshell/stylish и ~/.local/bin"
+
+if $DO_RELOAD; then
+  if command -v stylish-shell >/dev/null 2>&1; then
+    stylish-shell reload >/dev/null 2>&1 || stylish-shell restart >/dev/null 2>&1 || true
+    info "shell перезагружен"
+  elif [[ -x "$HOME/.local/bin/stylish-shell" ]]; then
+    "$HOME/.local/bin/stylish-shell" reload >/dev/null 2>&1 || "$HOME/.local/bin/stylish-shell" restart >/dev/null 2>&1 || true
+    info "shell перезагружен"
+  fi
+fi
+
+info "готово"

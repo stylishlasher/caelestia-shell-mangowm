@@ -59,6 +59,11 @@ DropPanel {
         Ui.close();
     }
 
+    function copyImage(id) {
+        Utils.run("cliphist decode " + Number(id) + " | wl-copy");
+        Ui.close();
+    }
+
     function remove(id) {
         Utils.run("echo " + Number(id) + " | cliphist delete");
         refreshTimer.restart();
@@ -125,11 +130,14 @@ DropPanel {
             }
 
             Chip {
+                id: wipeChip
+                property bool confirm: false
                 anchors.verticalCenter: parent.verticalCenter
                 label: "Очистить"
                 glyph: "\uf074"
-                onClicked: root.wipe()
+                onClicked: { if (wipeChip.confirm) { root.wipe(); wipeChip.confirm=false; wipeChip.label="Очистить"; } else { wipeChip.confirm=true; wipeChip.label="Точно?"; wipeTimer.restart(); } }
             }
+            Timer { id: wipeTimer; interval: 2500; onTriggered: { wipeChip.confirm=false; wipeChip.label="Очистить"; } }
         }
 
         Row {

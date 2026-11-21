@@ -81,6 +81,15 @@ Singleton {
             property string barStyle: "pills" // pills | solid
             property bool showActiveWindow: true
             property bool showWorkspaces: true
+            property var barLeftModules: ["launcher", "workspaces", "window"]
+            property var barCenterModules: ["media"]
+            property var barRightModules: ["network", "bluetooth", "volume", "battery", "clock", "notifications", "power"]
+
+            // Dashboard / launcher
+            property string dashboardTab: "overview" // overview | media | weather | notifications | system
+            property bool launcherShowActions: true
+            property bool launcherShowCalc: true
+            property int launcherMaxItems: 80
 
             // Misc
             property bool notificationsDnd: false

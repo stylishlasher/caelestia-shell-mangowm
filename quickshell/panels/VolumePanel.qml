@@ -78,7 +78,7 @@ DropPanel {
                 }
             }
 
-            SectionHeader { label: "Вывод" }
+            Row { width: parent.width; spacing: 8; SectionHeader { label: "Вывод" } Item { width: 1; height: 1 } Chip { label: "Аудио микшер"; glyph: "\uf028"; onClicked: Ui.open("audio", root.screen ? root.screen.name : "") } }
 
             Row {
                 width: parent.width

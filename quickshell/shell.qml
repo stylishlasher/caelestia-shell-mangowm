@@ -63,7 +63,7 @@ ShellRoot {
         }
     }
 
-    // Desktop double-right-click is handled in DesktopWidgets; keep a tiny top-right trigger as fallback.
+    // Desktop double-right-click: fullscreen bottom layer, only right-button is accepted.
     Variants {
         model: Quickshell.screens
 
@@ -74,19 +74,16 @@ ShellRoot {
             focusable: false
             exclusionMode: ExclusionMode.Ignore
             exclusiveZone: 0
-            implicitWidth: 24
-            implicitHeight: 24
-            anchors { top: true; right: true }
-            margins { top: Theme.barHeight + 4; right: 4 }
+            anchors { top: true; bottom: true; left: true; right: true }
             WlrLayershell.layer: WlrLayer.Bottom
-            WlrLayershell.namespace: "stylish-desktop-edit-trigger"
+            WlrLayershell.namespace: "stylish-desktop-rightclick"
 
             Timer { id: rightClickTimer; interval: 350 }
             MouseArea {
                 anchors.fill: parent
                 acceptedButtons: Qt.RightButton
-                cursorShape: Qt.PointingHandCursor
-                onClicked: {
+                propagateComposedEvents: true
+                onClicked: mouse => {
                     if (rightClickTimer.running) {
                         rightClickTimer.stop();
                         Ui.open("settings", modelData ? String(modelData.name) : shell.screenTarget());
@@ -94,6 +91,7 @@ ShellRoot {
                     } else {
                         rightClickTimer.restart();
                     }
+                    mouse.accepted = true;
                 }
             }
         }
@@ -191,6 +189,14 @@ ShellRoot {
         model: Quickshell.screens
 
         VolumePanel {
+            modelData: modelData
+        }
+    }
+
+    Variants {
+        model: Quickshell.screens
+
+        AudioPanel {
             modelData: modelData
         }
     }

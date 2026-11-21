@@ -262,122 +262,52 @@ PanelWindow {
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.verticalCenter: parent.verticalCenter
             spacing: 8
-            width: Math.min(implicitWidth, Math.max(0, bar.width - left.implicitWidth - right.implicitWidth - 48))
+            width: Math.min(implicitWidth, Math.max(0, root.width - left.implicitWidth - right.implicitWidth - 48))
             clip: true
 
-            Rectangle {
-                visible: Settings.data.showActiveWindow
-                width: Math.min(260, activeWinText.implicitWidth + 20)
-                height: 26
-                radius: 8
-                color: "transparent"
-
-                Text {
-                    id: activeWinText
-                    anchors.centerIn: parent
-                    width: Math.min(240, implicitWidth)
-                    text: {
-                        const clients = Mango.clientsFor(root.monitorName);
-                        for (let i = 0; i < clients.length; i++) if (clients[i].is_focused) return clients[i].title || clients[i].appid || "";
-                        return "";
-                    }
-                    color: Theme.subtext
-                    font.family: Theme.font
-                    font.pixelSize: Theme.fontSmall
-                    elide: Text.ElideRight
+            Repeater {
+                model: BarConfig.list("center")
+                delegate: Loader {
+                    required property string modelData
+                    anchors.verticalCenter: parent.verticalCenter
+                    sourceComponent: modelData === "window" ? centerWindowComp
+                        : modelData === "media" ? centerMediaComp
+                        : modelData === "clock" ? centerClockComp
+                        : null
                 }
             }
 
-            Rectangle {
-                visible: Settings.data.showMedia && Media.hasPlayer
-                width: Math.min(230, mediaRow.implicitWidth + 20)
-                height: 26
-                radius: 8
-                color: mediaMouse.containsMouse ? Theme.hover : "transparent"
-
-                Row {
-                    id: mediaRow
-                    anchors.centerIn: parent
-                    spacing: 7
-
-                    Icon {
-                        anchors.verticalCenter: parent.verticalCenter
-                        glyph: "\uf001"
-                        size: 13
-                        color: Media.playing ? Theme.accent : Theme.subtext
-                    }
-
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: Math.min(185, implicitWidth)
-                        text: Media.title.length > 0 ? Media.title : Media.identity
-                        color: Theme.text
-                        font.family: Theme.font
-                        font.pixelSize: Theme.fontSmall
-                        elide: Text.ElideRight
-                    }
-                }
-
-                MouseArea {
-                    id: mediaMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: Ui.toggle("music", root.monitorName)
+            Component {
+                id: centerWindowComp
+                Rectangle {
+                    visible: Settings.data.showActiveWindow
+                    width: Math.min(260, activeWinText.implicitWidth + 20)
+                    height: 26; radius: 8; color: "transparent"
+                    Text { id: activeWinText; anchors.centerIn: parent; width: Math.min(240, implicitWidth); text: { const clients = Mango.clientsFor(root.monitorName); for (let i = 0; i < clients.length; i++) if (clients[i].is_focused) return clients[i].title || clients[i].appid || ""; return ""; } color: Theme.subtext; font.family: Theme.font; font.pixelSize: Theme.fontSmall; elide: Text.ElideRight }
                 }
             }
-
-            Item {
-                width: clockRow.implicitWidth + 16
-                height: 26
-
-                Row {
-                    id: clockRow
-                    anchors.centerIn: parent
-                    spacing: 6
-
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        visible: Settings.data.showClock
-                        text: Utils.clockText(clock.date, Settings.data.use24h, Settings.data.showSeconds)
-                        color: Theme.text
-                        font.family: Theme.font
-                        font.pixelSize: Theme.fontSize
-                        font.weight: Font.DemiBold
+            Component {
+                id: centerMediaComp
+                Rectangle {
+                    visible: Settings.data.showMedia && Media.hasPlayer
+                    width: Math.min(230, mediaRow.implicitWidth + 20); height: 26; radius: 8
+                    color: mediaMouse.containsMouse ? Theme.hover : "transparent"
+                    Row { id: mediaRow; anchors.centerIn: parent; spacing: 7
+                        Icon { anchors.verticalCenter: parent.verticalCenter; glyph: "\uf001"; size: 13; color: Media.playing ? Theme.accent : Theme.subtext }
+                        Text { anchors.verticalCenter: parent.verticalCenter; width: Math.min(185, implicitWidth); text: Media.title.length > 0 ? Media.title : Media.identity; color: Theme.text; font.family: Theme.font; font.pixelSize: Theme.fontSmall; elide: Text.ElideRight }
                     }
-
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        visible: Weather.hasData && Settings.data.showClock
-                        text: Utils.weatherIcon(Weather.weatherCode, Weather.isDay)
-                        color: Theme.subtext
-                        font.family: Theme.iconFont
-                        font.pixelSize: 12
-                    }
-                }
-
-                MouseArea {
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: Ui.toggle("time", root.monitorName)
+                    MouseArea { id: mediaMouse; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: Ui.toggle("music", root.monitorName) }
                 }
             }
-
-            Rectangle {
-                visible: Settings.data.showLanguage
-                width: languageText.implicitWidth + 14
-                height: 22
-                radius: 7
-                color: Utils.alpha(Theme.text, 0.05)
-
-                Text {
-                    id: languageText
-                    anchors.centerIn: parent
-                    text: Utils.layoutLabel(Mango.layout)
-                    color: Theme.subtext
-                    font.family: Theme.font
-                    font.pixelSize: Theme.fontTiny
-                    font.weight: Font.DemiBold
+            Component {
+                id: centerClockComp
+                Item {
+                    width: clockRow.implicitWidth + 16; height: 26
+                    Row { id: clockRow; anchors.centerIn: parent; spacing: 6
+                        Text { anchors.verticalCenter: parent.verticalCenter; visible: Settings.data.showClock; text: Utils.clockText(clock.date, Settings.data.use24h, Settings.data.showSeconds); color: Theme.text; font.family: Theme.font; font.pixelSize: Theme.fontSize; font.weight: Font.DemiBold }
+                        Text { anchors.verticalCenter: parent.verticalCenter; visible: Weather.hasData && Settings.data.showClock; text: Utils.weatherIcon(Weather.weatherCode, Weather.isDay); color: Theme.subtext; font.family: Theme.iconFont; font.pixelSize: 12 }
+                    }
+                    MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: Ui.toggle("time", root.monitorName) }
                 }
             }
         }
@@ -390,142 +320,50 @@ PanelWindow {
             anchors.verticalCenter: parent.verticalCenter
             spacing: 2
 
-            Row {
-                visible: Settings.data.showTray
-                spacing: 1
-                anchors.verticalCenter: parent.verticalCenter
+            Repeater {
+                model: BarConfig.list("right")
+                delegate: Loader {
+                    required property string modelData
+                    anchors.verticalCenter: parent.verticalCenter
+                    sourceComponent: modelData === "network" ? netComp
+                        : modelData === "bluetooth" ? btComp
+                        : modelData === "volume" ? volComp
+                        : modelData === "battery" ? batComp
+                        : modelData === "clock" ? clockComp
+                        : modelData === "notifications" ? notifComp
+                        : modelData === "power" ? powerComp
+                        : null
+                }
+            }
 
-                Repeater {
-                    model: Settings.data.showTray ? SystemTray.items.values : []
-
-                    Item {
-                        id: trayItem
-                        required property var modelData
-                        width: 22
-                        height: 22
-
-                        Rectangle {
-                            anchors.fill: parent
-                            radius: 6
-                            color: trayMouse.containsMouse ? Theme.hover : "transparent"
-                        }
-
-                        AppIcon {
-                            anchors.fill: parent
-                            anchors.margins: 4
-                            iconName: trayItem.modelData.icon
-                            size: 14
-                            useFallbackColor: true
-                        }
-
-                        MouseArea {
-                            id: trayMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                if (trayItem.modelData.onlyMenu)
-                                    trayItem.modelData.activate();
-                                else
-                                    trayItem.modelData.activate();
-                            }
-                        }
+            Component { id: netComp; IconButton { visible: Settings.data.showNetwork; glyph: root.networkGlyph(); iconSize: 14; active: Ui.panel === "network"; onClicked: Ui.toggle("network", root.monitorName) } }
+            Component { id: btComp; IconButton { visible: Settings.data.showBluetooth && root.btAvailable; glyph: "\uf294"; iconSize: 14; active: Ui.panel === "network"; tint: Bluetooth.defaultAdapter && Bluetooth.defaultAdapter.enabled ? Theme.text : Theme.subtext; onClicked: Ui.toggle("network", root.monitorName) } }
+            Component { id: volComp; IconButton { visible: Settings.data.showVolume; glyph: root.volumeGlyph(); iconSize: 14; active: Ui.panel === "volume"; onClicked: Ui.toggle("volume", root.monitorName); onRightClicked: root.toggleVolumeMute() } }
+            Component {
+                id: batComp
+                Item {
+                    visible: Settings.data.showBattery && root.battery && root.battery.isPresent
+                    width: batteryRow.implicitWidth + 12; height: 24
+                    Row { id: batteryRow; anchors.centerIn: parent; spacing: 4
+                        Icon { anchors.verticalCenter: parent.verticalCenter; glyph: root.batteryGlyph(); size: 13; color: root.battery && root.battery.percentage <= 15 ? Theme.red : Theme.text }
+                        Text { anchors.verticalCenter: parent.verticalCenter; text: root.battery ? Math.round(root.battery.percentage) + "%" : ""; color: Theme.subtext; font.family: Theme.font; font.pixelSize: Theme.fontTiny }
                     }
                 }
             }
-
-            IconButton {
-                visible: Settings.data.showNetwork
-                glyph: root.networkGlyph()
-                iconSize: 14
-                active: Ui.panel === "network"
-                onClicked: Ui.toggle("network", root.monitorName)
+            Component {
+                id: clockComp
+                IconButton { visible: Settings.data.showClock; glyph: "\uf017"; iconSize: 14; active: Ui.panel === "time"; onClicked: Ui.toggle("time", root.monitorName) }
             }
-
-            IconButton {
-                visible: Settings.data.showBluetooth && root.btAvailable
-                glyph: "\uf294"
-                iconSize: 14
-                active: Ui.panel === "network"
-                tint: Bluetooth.defaultAdapter && Bluetooth.defaultAdapter.enabled
-                    ? Theme.text : Theme.subtext
-                onClicked: Ui.toggle("network", root.monitorName)
-            }
-
-            IconButton {
-                visible: Settings.data.showVolume
-                glyph: root.volumeGlyph()
-                iconSize: 14
-                active: Ui.panel === "volume"
-                onClicked: Ui.toggle("volume", root.monitorName)
-                onRightClicked: root.toggleVolumeMute()
-            }
-
-            Item {
-                visible: Settings.data.showBattery && root.battery && root.battery.isPresent
-                width: batteryRow.implicitWidth + 12
-                height: 24
-
-                Row {
-                    id: batteryRow
-                    anchors.centerIn: parent
-                    spacing: 4
-
-                    Icon {
-                        anchors.verticalCenter: parent.verticalCenter
-                        glyph: root.batteryGlyph()
-                        size: 13
-                        color: root.battery && root.battery.percentage <= 15
-                            ? Theme.red : Theme.text
-                    }
-
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: root.battery ? Math.round(root.battery.percentage) + "%" : ""
-                        color: Theme.subtext
-                        font.family: Theme.font
-                        font.pixelSize: Theme.fontTiny
-                    }
+            Component {
+                id: notifComp
+                IconButton {
+                    visible: Settings.data.showNotifications
+                    glyph: "\uf0f3"; iconSize: 14; active: Ui.panel === "notifications"
+                    onClicked: { Ui.toggle("notifications", root.monitorName); Notifications.markRead(); }
+                    Rectangle { visible: Notifications.unread > 0; width: 6; height: 6; radius: 3; color: Theme.red; anchors.right: parent.right; anchors.top: parent.top; anchors.rightMargin: 5; anchors.topMargin: 5 }
                 }
             }
-
-            IconButton {
-                visible: Settings.data.showNotifications
-                glyph: "\uf0f3"
-                iconSize: 14
-                active: Ui.panel === "control"
-                onClicked: {
-                    Ui.toggle("notifications", root.monitorName);
-                    Notifications.markRead();
-                }
-
-                Rectangle {
-                    visible: Notifications.unread > 0
-                    width: 6
-                    height: 6
-                    radius: 3
-                    color: Theme.red
-                    anchors.right: parent.right
-                    anchors.top: parent.top
-                    anchors.rightMargin: 5
-                    anchors.topMargin: 5
-                }
-            }
-
-            IconButton {
-                glyph: "\uf013"
-                iconSize: 14
-                active: Ui.panel === "settings"
-                onClicked: Ui.toggle("settings", root.monitorName)
-            }
-
-            IconButton {
-                visible: Settings.data.showPower
-                glyph: "\uf011"
-                iconSize: 14
-                active: Ui.panel === "power"
-                onClicked: Ui.toggle("power", root.monitorName)
-            }
+            Component { id: powerComp; IconButton { visible: Settings.data.showPower; glyph: "\uf011"; iconSize: 14; active: Ui.panel === "power"; onClicked: Ui.toggle("power", root.monitorName) } }
         }
     }
 }

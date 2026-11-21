@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
 import "../singletons"
@@ -48,7 +49,7 @@ PanelWindow {
                 width: parent.width
                 spacing: 8
                 Text { text: "Уведомления"; color: Theme.text; font.family: Theme.font; font.pixelSize: 18; font.weight: Font.DemiBold; anchors.verticalCenter: parent.verticalCenter }
-                Item { width: 1; height: 1; Layout.fillWidth: true }
+                Item { Layout.fillWidth: true; height: 1 }
                 Chip { label: Notifications.dnd ? "DND вкл" : "DND выкл"; active: Notifications.dnd; onClicked: Notifications.toggleDnd() }
                 Chip { label: "Очистить"; onClicked: Notifications.dismissAll() }
                 IconButton { glyph: "\uf00d"; iconSize: 12; tint: Theme.subtext; onClicked: Ui.close() }

@@ -798,6 +798,30 @@ DropPanel {
                         }
                     }
 
+                    SectionHeader { label: "Кастомизация модулей панели" }
+                    Text { width: parent.width; text: "Выберите модули для левой, центральной и правой секций панели."; color: Theme.subtext; font.family: Theme.font; font.pixelSize: Theme.fontSmall; wrapMode: Text.WordWrap }
+                    Repeater {
+                        model: ["left","center","right"]
+                        delegate: Column {
+                            required property string modelData
+                            width: barPage.width
+                            spacing: 4
+                            Text { text: modelData === "left" ? "Слева" : modelData === "center" ? "Центр" : "Справа"; color: Theme.text; font.family: Theme.font; font.pixelSize: Theme.fontSmall; font.weight: Font.DemiBold; topPadding: 6 }
+                            Flow {
+                                width: parent.width; spacing: 6
+                                Repeater {
+                                    model: Object.keys(BarConfig.moduleDefs)
+                                    delegate: Chip {
+                                        required property string modelData
+                                        label: BarConfig.moduleDefs[modelData].label
+                                        active: BarConfig.has(parent.parent.modelData, modelData)
+                                        onClicked: BarConfig.toggle(parent.parent.modelData, modelData)
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     SectionHeader { label: "Элементы панели" }
 
                     SettingRow {

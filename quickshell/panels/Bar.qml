@@ -262,6 +262,8 @@ PanelWindow {
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.verticalCenter: parent.verticalCenter
             spacing: 8
+            width: Math.min(implicitWidth, Math.max(0, bar.width - left.implicitWidth - right.implicitWidth - 48))
+            clip: true
 
             Rectangle {
                 visible: Settings.data.showActiveWindow

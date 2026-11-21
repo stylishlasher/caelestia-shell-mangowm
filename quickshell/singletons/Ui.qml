@@ -71,4 +71,15 @@ Singleton {
         interval: 1400
         onTriggered: root.osd = ""
     }
+
+    NumberAnimation {
+        id: wpAnim
+        target: root
+        property: "wallpaperTransition"
+        from: 1
+        to: 0
+        duration: Math.max(0, Settings.data.wallpaperTransitionMs || 700)
+        easing.type: Easing.InOutCubic
+        onFinished: root.wallpaperTransitionImage = ""
+    }
 }

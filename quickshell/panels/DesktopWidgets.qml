@@ -8,7 +8,14 @@ Scope {
     id: root
 
     property var modelData: null
+    property bool editMode: false
     readonly property string screenName: modelData ? String(modelData.name) : ""
+
+    Connections {
+        target: Ui
+        function onDesktopEditRequestChanged() { root.editMode = true; editHideTimer.restart(); }
+    }
+    Timer { id: editHideTimer; interval: 8000; onTriggered: root.editMode = false }
     readonly property bool isMainScreen: {
         if (Quickshell.screens.length === 0)
             return true;
@@ -39,6 +46,17 @@ Scope {
         WlrLayershell.layer: WlrLayer.Bottom
         WlrLayershell.namespace: "stylish-desktop-clock"
 
+        Timer { id: clockRightClickTimer; interval: 350 }
+        MouseArea {
+            anchors.fill: parent
+            acceptedButtons: Qt.RightButton
+            onClicked: {
+                if (clockRightClickTimer.running) { clockRightClickTimer.stop(); Ui.open("settings", root.screenName); Ui.desktopEditRequest++; }
+                else clockRightClickTimer.restart();
+            }
+            z: -1
+        }
+
         anchors {
             top: root.posTop
             bottom: !root.posTop
@@ -51,6 +69,21 @@ Scope {
             bottom: !root.posTop ? root.bottomMargin : 0
             left: root.posLeft ? 18 : 0
             right: !root.posLeft ? 18 : 0
+        }
+
+        Rectangle {
+            visible: root.editMode
+            anchors.bottom: clockCard.top
+            anchors.horizontalCenter: clockCard.horizontalCenter
+            anchors.bottomMargin: 8
+            width: hintText.implicitWidth + 20
+            height: 30
+            radius: 8
+            color: Theme.panelColor
+            border.width: 1
+            border.color: Theme.border
+            z: 99
+            Text { id: hintText; anchors.centerIn: parent; text: "Двойной ПКМ по рабочему столу — редактор виджетов (вкладка Виджеты)"; color: Theme.text; font.family: Theme.font; font.pixelSize: Theme.fontTiny }
         }
 
         Rectangle {
@@ -170,6 +203,17 @@ Scope {
 
         WlrLayershell.layer: WlrLayer.Bottom
         WlrLayershell.namespace: "stylish-desktop-media"
+
+        Timer { id: mediaRightClickTimer; interval: 350 }
+        MouseArea {
+            anchors.fill: parent
+            acceptedButtons: Qt.RightButton
+            onClicked: {
+                if (mediaRightClickTimer.running) { mediaRightClickTimer.stop(); Ui.open("settings", root.screenName); Ui.desktopEditRequest++; }
+                else mediaRightClickTimer.restart();
+            }
+            z: -1
+        }
 
         anchors {
             bottom: true

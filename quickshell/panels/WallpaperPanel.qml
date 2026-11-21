@@ -31,7 +31,7 @@ DropPanel {
     }
 
     function apply(path) {
-        Settings.data.wallpaper = path;
+        Ui.startWallpaperTransition(path);
         Settings.data.wallpaper = path;
         const cmd = "if command -v stylish-set-wallpaper >/dev/null 2>&1; then stylish-set-wallpaper " + Utils.shq(path)
             + "; elif [ -x ~/.local/bin/stylish-set-wallpaper ]; then ~/.local/bin/stylish-set-wallpaper " + Utils.shq(path)
@@ -108,6 +108,7 @@ DropPanel {
                 label: "Случайные"
                 glyph: "\uf074"
                 onClicked: {
+                    Ui.startWallpaperTransition("");
                     const cmd = "if command -v stylish-set-wallpaper >/dev/null 2>&1; then stylish-set-wallpaper --random; elif [ -x ~/.local/bin/stylish-set-wallpaper ]; then ~/.local/bin/stylish-set-wallpaper --random; elif [ -x ~/.config/quickshell/stylish/scripts/stylish-set-wallpaper ]; then ~/.config/quickshell/stylish/scripts/stylish-set-wallpaper --random; fi";
                     Utils.run(cmd);
                 }

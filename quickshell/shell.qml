@@ -63,7 +63,7 @@ ShellRoot {
         }
     }
 
-    // Desktop background hit area for right-click menu -----------------------
+    // Desktop double-right-click is handled in DesktopWidgets; keep a tiny top-right trigger as fallback.
     Variants {
         model: Quickshell.screens
 
@@ -74,27 +74,25 @@ ShellRoot {
             focusable: false
             exclusionMode: ExclusionMode.Ignore
             exclusiveZone: 0
-            anchors { top: true; bottom: true; left: true; right: true }
+            implicitWidth: 24
+            implicitHeight: 24
+            anchors { top: true; right: true }
+            margins { top: Theme.barHeight + 4; right: 4 }
             WlrLayershell.layer: WlrLayer.Bottom
-            WlrLayershell.namespace: "stylish-desktop-bg"
-            implicitWidth: 1
-            implicitHeight: 1
+            WlrLayershell.namespace: "stylish-desktop-edit-trigger"
 
-            Timer { id: rightClickTimer; interval: 350; onTriggered: { /* single right click ignored */ } }
+            Timer { id: rightClickTimer; interval: 350 }
             MouseArea {
                 anchors.fill: parent
-                acceptedButtons: Qt.RightButton | Qt.LeftButton
-                onClicked: mouse => {
-                    if (mouse.button === Qt.RightButton) {
-                        if (rightClickTimer.running) {
-                            rightClickTimer.stop();
-                            Ui.open("settings", modelData ? String(modelData.name) : shell.screenTarget());
-                            Ui.desktopEditRequest++;
-                        } else {
-                            rightClickTimer.restart();
-                        }
+                acceptedButtons: Qt.RightButton
+                cursorShape: Qt.PointingHandCursor
+                onClicked: {
+                    if (rightClickTimer.running) {
+                        rightClickTimer.stop();
+                        Ui.open("settings", modelData ? String(modelData.name) : shell.screenTarget());
+                        Ui.desktopEditRequest++;
                     } else {
-                        Ui.close();
+                        rightClickTimer.restart();
                     }
                 }
             }

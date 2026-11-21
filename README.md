@@ -103,3 +103,9 @@ stylish-update --repo /path/to/stylish-dots-nextgen
 - `mango/scripts/power-menu` and `wallpaper-pick` also prefer Quickshell panels.
 - Legacy Waybar/dock scripts remain in `mango/scripts` for reference/fallback, but autostart now starts `stylish-shell`.
 - Quickshell DesktopEntries singleton wraps `Quickshell.DesktopEntries`; if your Quickshell build exposes a different API, adjust `quickshell/singletons/DesktopEntries.qml`.
+
+
+## Авторство и вдохновение
+
+- Основа: [stylishlasher/stylish-dots](https://github.com/stylishlasher/stylish-dots)
+- Идеи и референсы UI/модулей: [ilyamiro/serpantinum](https://github.com/ilyamiro/serpantinum), [Caelestia-Shell](https://github.com/caelestia-dots/shell)

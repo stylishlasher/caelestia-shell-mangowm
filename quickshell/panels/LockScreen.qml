@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Effects
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Services.Pam
@@ -8,12 +9,20 @@ import "../components"
 WlSessionLockSurface {
     id: root
 
-    color: Theme.bg
+    color: "#000000"
 
     property string password: ""
     property bool authenticating: false
     property string error: ""
     property int tick: 0
+
+    readonly property string wallpaperSource: Settings.data.wallpaper.length > 0
+        ? "file://" + Utils.expand(Settings.data.wallpaper) : ""
+    readonly property string avatarSource: {
+        const u = Quickshell.env("USER") || "";
+        const p = "/var/lib/AccountsService/icons/" + u;
+        return p.length > 0 ? "file://" + p : "";
+    }
 
     function tryUnlock() {
         if (root.authenticating)
@@ -46,28 +55,17 @@ WlSessionLockSurface {
             root.sendResponse();
     }
 
-    Timer {
-        interval: 1000
-        repeat: true
-        running: true
-        onTriggered: root.tick++
-    }
+    Timer { interval: 1000; repeat: true; running: true; onTriggered: root.tick++ }
 
     PamContext {
         id: pam
         config: "login"
         user: Quickshell.env("USER") || ""
-
-        onResponseRequiredChanged: {
-            if (responseRequired)
-                root.sendResponse();
-        }
-
+        onResponseRequiredChanged: if (responseRequired) root.sendResponse()
         onCompleted: result => {
             root.authenticating = false;
             if (result === PamResult.Success) {
-                root.password = "";
-                root.error = "";
+                root.password = ""; root.error = "";
                 Ui.unlock();
             } else {
                 root.error = "Неверный пароль";
@@ -76,194 +74,233 @@ WlSessionLockSurface {
                 passwordInput.forceActiveFocus();
             }
         }
-
-        onError: error => {
-            root.authenticating = false;
-            root.error = "Ошибка авторизации";
-        }
+        onError: { root.authenticating = false; root.error = "Ошибка авторизации"; }
     }
 
+    // Background ------------------------------------------------------------
     Image {
+        id: bg
         anchors.fill: parent
-        source: Settings.data.wallpaper.length > 0
-            ? "file://" + Utils.expand(Settings.data.wallpaper) : ""
+        source: root.wallpaperSource
         fillMode: Image.PreserveAspectCrop
         asynchronous: true
-        visible: source.toString().length > 0 && status === Image.Ready
+        cache: true
+        visible: status === Image.Ready
     }
 
     Rectangle {
         anchors.fill: parent
-        color: Utils.alpha(Theme.bg, 0.72)
+        gradient: Gradient {
+            GradientStop { position: 0.0; color: Utils.alpha(Theme.bg, 0.20) }
+            GradientStop { position: 0.45; color: Utils.alpha(Theme.bg, 0.45) }
+            GradientStop { position: 1.0; color: Utils.alpha(Theme.bg, 0.78) }
+        }
     }
 
+    // Clock / date ----------------------------------------------------------
     Column {
-        anchors.centerIn: parent
-        width: Math.min(420, parent.width - 64)
-        spacing: 14
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: parent.top
+        anchors.topMargin: parent.height * 0.12
+        spacing: 4
 
         Text {
-            width: parent.width
-            text: {
-                root.tick;
-                return Utils.clockText(new Date(), Settings.data.use24h, false);
-            }
+            anchors.horizontalCenter: parent.horizontalCenter
+            text: { root.tick; return Utils.clockText(new Date(), Settings.data.use24h, false); }
             color: Theme.text
             font.family: Theme.font
-            font.pixelSize: 76
+            font.pixelSize: Math.min(112, root.height * 0.14)
             font.weight: Font.Light
-            horizontalAlignment: Text.AlignHCenter
+            style: Text.Raised
+            styleColor: Utils.alpha("#000000", 0.25)
         }
 
         Text {
-            width: parent.width
+            anchors.horizontalCenter: parent.horizontalCenter
             text: Utils.dateText(new Date())
-            color: Theme.subtext
+            color: Utils.alpha(Theme.text, 0.88)
             font.family: Theme.font
-            font.pixelSize: Theme.fontSize
-            horizontalAlignment: Text.AlignHCenter
-            bottomPadding: 18
+            font.pixelSize: 20
+            style: Text.Raised
+            styleColor: Utils.alpha("#000000", 0.2)
         }
+    }
+
+    // Center card -----------------------------------------------------------
+    Rectangle {
+        id: card
+        anchors.centerIn: parent
+        anchors.verticalCenterOffset: root.height * 0.06
+        width: Math.min(420, root.width - 80)
+        height: cardCol.implicitHeight + 44
+        radius: Theme.radius + 8
+        color: Utils.alpha(Theme.surface, 0.72)
+        border.width: 1
+        border.color: Utils.alpha(Theme.text, 0.08)
 
         Rectangle {
-            anchors.horizontalCenter: parent.horizontalCenter
-            width: 78
-            height: 78
-            radius: 39
-            color: Utils.alpha(Theme.accent, 0.16)
-            border.width: 2
-            border.color: Utils.alpha(Theme.accent, 0.4)
-
-            Icon {
-                anchors.centerIn: parent
-                glyph: "\uf023"
-                size: 30
-                color: Theme.accent
-            }
-        }
-
-        Text {
-            width: parent.width
-            text: Quickshell.env("USER") || "пользователь"
-            color: Theme.text
-            font.family: Theme.font
-            font.pixelSize: Theme.fontSize
-            font.weight: Font.Medium
-            horizontalAlignment: Text.AlignHCenter
-            topPadding: 4
-        }
-
-        Rectangle {
-            width: parent.width
-            height: 46
-            radius: Theme.radiusSmall
-            color: Utils.alpha(Theme.text, 0.06)
-            border.width: passwordInput.activeFocus ? 1 : 0
-            border.color: Utils.alpha(Theme.accent, 0.5)
-
-            Icon {
-                id: lockIcon
-                anchors.left: parent.left
-                anchors.leftMargin: 14
-                anchors.verticalCenter: parent.verticalCenter
-                glyph: "\uf023"
-                size: 14
-                color: root.authenticating ? Theme.accent : Theme.subtext
-            }
-
-            TextInput {
-                id: passwordInput
-                anchors.fill: parent
-                anchors.leftMargin: 40
-                anchors.rightMargin: 14
-                verticalAlignment: TextInput.AlignVCenter
-                color: Theme.text
-                font.family: Theme.font
-                font.pixelSize: 15
-                echoMode: TextInput.Password
-                passwordCharacter: "●"
-                passwordMaskDelay: 0
-                selectionColor: Utils.alpha(Theme.accent, 0.4)
-                selectedTextColor: Theme.text
-                clip: true
-                focus: true
-
-                onTextChanged: root.password = text
-                onAccepted: root.submit()
-
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    visible: passwordInput.text.length === 0
-                    text: root.authenticating ? "Проверка пароля…" : "Пароль"
-                    color: Theme.subtext
-                    font.family: Theme.font
-                    font.pixelSize: 15
-                }
-            }
-        }
-
-        Text {
-            width: parent.width
-            text: root.error
-            color: Theme.red
-            font.family: Theme.font
-            font.pixelSize: Theme.fontSmall
-            horizontalAlignment: Text.AlignHCenter
-            visible: root.error.length > 0
-        }
-
-        Rectangle {
-            anchors.horizontalCenter: parent.horizontalCenter
-            width: Math.min(220, parent.width)
-            height: 42
-            radius: Theme.radiusSmall
-            color: unlockMouse.containsMouse
-                ? Utils.alpha(Theme.accent, 0.32) : Utils.alpha(Theme.accent, 0.2)
+            anchors.fill: parent
+            anchors.margins: 1
+            radius: parent.radius - 1
+            color: "transparent"
             border.width: 1
-            border.color: Utils.alpha(Theme.accent, 0.4)
+            border.color: Utils.alpha(Theme.text, 0.04)
+        }
 
-            Row {
-                anchors.centerIn: parent
-                spacing: 8
+        Column {
+            id: cardCol
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.margins: 22
+            spacing: 14
+
+            // Avatar
+            Item {
+                width: 92; height: 92
+                anchors.horizontalCenter: parent.horizontalCenter
+
+                Rectangle {
+                    anchors.fill: parent
+                    radius: 46
+                    color: Utils.alpha(Theme.accent, 0.18)
+                    border.width: 2
+                    border.color: Utils.alpha(Theme.accent, 0.45)
+                }
+
+                Image {
+                    id: avatar
+                    anchors.fill: parent
+                    anchors.margins: 3
+                    source: root.avatarSource
+                    fillMode: Image.PreserveAspectCrop
+                    asynchronous: true
+                    visible: status === Image.Ready
+                    layer.enabled: true
+                    layer.effect: MultiEffect { maskEnabled: true; maskSource: avatarMask }
+                }
+                Item { id: avatarMask; anchors.fill: avatar; layer.enabled: true; visible: false; Rectangle { anchors.fill: parent; radius: width / 2 } }
 
                 Icon {
-                    anchors.verticalCenter: parent.verticalCenter
-                    glyph: "\uf023"
-                    size: 13
+                    anchors.centerIn: parent
+                    visible: avatar.status !== Image.Ready
+                    glyph: "\uf007"
+                    size: 34
                     color: Theme.accent
                 }
+            }
+
+            Text {
+                width: parent.width
+                text: Quickshell.env("USER") || "пользователь"
+                color: Theme.text
+                font.family: Theme.font
+                font.pixelSize: 22
+                font.weight: Font.DemiBold
+                horizontalAlignment: Text.AlignHCenter
+            }
+
+            Text {
+                width: parent.width
+                text: root.authenticating ? "Проверка пароля…" : "Введите пароль для входа"
+                color: Theme.subtext
+                font.family: Theme.font
+                font.pixelSize: Theme.fontSmall
+                horizontalAlignment: Text.AlignHCenter
+            }
+
+            Rectangle {
+                width: parent.width
+                height: 48
+                radius: Theme.radiusSmall
+                color: Utils.alpha(Theme.text, passwordInput.activeFocus ? 0.09 : 0.05)
+                border.width: 1
+                border.color: passwordInput.activeFocus ? Utils.alpha(Theme.accent, 0.7) : Utils.alpha(Theme.text, 0.08)
+
+                Icon {
+                    anchors.left: parent.left
+                    anchors.leftMargin: 14
+                    anchors.verticalCenter: parent.verticalCenter
+                    glyph: "\uf023"
+                    size: 14
+                    color: root.authenticating ? Theme.accent : Theme.subtext
+                }
+
+                TextInput {
+                    id: passwordInput
+                    anchors.fill: parent
+                    anchors.leftMargin: 42
+                    anchors.rightMargin: 14
+                    verticalAlignment: TextInput.AlignVCenter
+                    color: Theme.text
+                    font.family: Theme.font
+                    font.pixelSize: 15
+                    echoMode: TextInput.Password
+                    passwordCharacter: "•"
+                    passwordMaskDelay: 0
+                    selectionColor: Utils.alpha(Theme.accent, 0.35)
+                    selectedTextColor: Theme.text
+                    clip: true
+                    focus: true
+                    enabled: !root.authenticating
+
+                    onTextChanged: root.password = text
+                    onAccepted: root.submit()
+
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        visible: passwordInput.text.length === 0
+                        text: "Пароль"
+                        color: Theme.subtext
+                        font.family: Theme.font
+                        font.pixelSize: 15
+                    }
+                }
+            }
+
+            Text {
+                width: parent.width
+                visible: root.error.length > 0
+                text: root.error
+                color: Theme.red
+                font.family: Theme.font
+                font.pixelSize: Theme.fontSmall
+                horizontalAlignment: Text.AlignHCenter
+            }
+
+            Rectangle {
+                width: parent.width
+                height: 44
+                radius: Theme.radiusSmall
+                color: unlockMouse.containsMouse ? Theme.accent : Utils.alpha(Theme.accent, 0.88)
 
                 Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: root.authenticating ? "Войти" : "Разблокировать"
-                    color: Theme.accent
+                    anchors.centerIn: parent
+                    text: root.authenticating ? "Проверка..." : "Разблокировать"
+                    color: Theme.onAccent
                     font.family: Theme.font
                     font.pixelSize: Theme.fontSize
                     font.weight: Font.DemiBold
                 }
-            }
 
-            MouseArea {
-                id: unlockMouse
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                onClicked: {
-                    passwordInput.forceActiveFocus();
-                    root.submit();
+                MouseArea {
+                    id: unlockMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: { passwordInput.forceActiveFocus(); root.submit(); }
                 }
             }
         }
+    }
 
-        Text {
-            width: parent.width
-            text: "Enter — разблокировать"
-            color: Theme.subtext
-            font.family: Theme.font
-            font.pixelSize: Theme.fontTiny
-            horizontalAlignment: Text.AlignHCenter
-            opacity: 0.7
-            topPadding: 6
-        }
+    Text {
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 28
+        text: "Enter — разблокировать"
+        color: Utils.alpha(Theme.text, 0.55)
+        font.family: Theme.font
+        font.pixelSize: Theme.fontSmall
     }
 }

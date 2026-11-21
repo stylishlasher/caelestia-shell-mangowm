@@ -286,16 +286,17 @@ generate_quickshell() {
     local json="$1"
     local dir="$CONFIG_HOME/stylish"
     mkdir -p "$dir"
-    local tmp
-    tmp="$(mktemp "$dir/.matugen-colors.XXXXXX")"
-    if ! jq --arg mode "$(theme_mode)" '
-        .colors | with_entries(.value = .value[$mode].color)
-    ' <<<"$json" >"$tmp"; then
-        rm -f "$tmp"
-        warn "не удалось сгенерировать тему Quickshell"
-        return 0
+    local tmp_dark tmp_light
+    tmp_dark="$(mktemp "$dir/.matugen-colors.XXXXXX")"
+    tmp_light="$(mktemp "$dir/.matugen-colors-light.XXXXXX")"
+    if ! jq '.colors | with_entries(.value = .value.dark.color)' <<<"$json" >"$tmp_dark"; then
+        rm -f "$tmp_dark" "$tmp_light"; warn "не удалось сгенерировать тему Quickshell"; return 0
     fi
-    mv "$tmp" "$dir/matugen-colors.json"
+    if ! jq '.colors | with_entries(.value = .value.light.color)' <<<"$json" >"$tmp_light"; then
+        rm -f "$tmp_dark" "$tmp_light"; warn "не удалось сгенерировать светлую тему Quickshell"; return 0
+    fi
+    mv "$tmp_dark" "$dir/matugen-colors.json"
+    mv "$tmp_light" "$dir/matugen-colors-light.json"
 }
 generate_palette() {
     command -v matugen >/dev/null 2>&1 || {

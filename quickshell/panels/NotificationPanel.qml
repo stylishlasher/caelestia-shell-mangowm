@@ -45,10 +45,10 @@ PanelWindow {
             anchors.margins: 14
             spacing: 10
 
-            Row {
+            RowLayout {
                 width: parent.width
                 spacing: 8
-                Text { text: "Уведомления"; color: Theme.text; font.family: Theme.font; font.pixelSize: 18; font.weight: Font.DemiBold; anchors.verticalCenter: parent.verticalCenter }
+                Text { text: "Уведомления"; color: Theme.text; font.family: Theme.font; font.pixelSize: 18; font.weight: Font.DemiBold; Layout.alignment: Qt.AlignVCenter }
                 Item { Layout.fillWidth: true; height: 1 }
                 Chip { label: Notifications.dnd ? "DND вкл" : "DND выкл"; active: Notifications.dnd; onClicked: Notifications.toggleDnd() }
                 Chip { label: "Очистить"; onClicked: Notifications.dismissAll() }

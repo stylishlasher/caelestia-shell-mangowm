@@ -31,3 +31,7 @@ post_hook = "~/.config/mango/scripts/apply-matugen-accent 2>/dev/null || true"
 [templates.quickshell]
 input_path = "~/.config/matugen/templates/quickshell-colors.json"
 output_path = "~/.config/stylish/matugen-colors.json"
+
+[templates.quickshell-light]
+input_path = "~/.config/matugen/templates/quickshell-colors-light.json"
+output_path = "~/.config/stylish/matugen-colors-light.json"

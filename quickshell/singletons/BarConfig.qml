@@ -20,10 +20,18 @@ Singleton {
         "power": { label: "Питание", icon: "\uf011" }
     })
 
+    readonly property var defaults: ({
+        left: ["launcher", "workspaces", "window"],
+        center: ["media", "clock"],
+        right: ["network", "bluetooth", "volume", "battery", "notifications", "power"]
+    })
+
     function list(section) {
         const key = section === "left" ? "barLeftModules" : section === "center" ? "barCenterModules" : "barRightModules";
         const v = Settings.data[key];
-        return v && v.length !== undefined ? v.slice() : [];
+        if (v && v.length !== undefined && v.length > 0)
+            return v.slice();
+        return (root.defaults[section] || []).slice();
     }
 
     function setList(section, arr) {

@@ -154,7 +154,7 @@ DropPanel {
 
             Text {
                 width: parent.width
-                text: "Super+H — открыть эти настройки"
+                text: "Super+S — открыть эти настройки"
                 color: Theme.subtext
                 font.family: Theme.font
                 font.pixelSize: Theme.fontTiny
@@ -1177,9 +1177,9 @@ DropPanel {
 
                     Text {
                         width: parent.width
-                        text: "Super+D — лаунчер · Super+N — сеть и Bluetooth · Super+C — буфер обмена\n"
-                            + "Super+V — громкость · Super+B — панель управления · Super+M — музыка\n"
-                            + "Super+W — обои · Super+S — время и погода · Super+L — блокировка"
+                        text: "Super+D — лаунчер · Super+S — настройки · Super+C — буфер обмена\n"
+                            + "Super+W — обои · Super+B — меню питания · Super+L — блокировка\n"
+                            + "Super+Return — терминал · Super+E — файлы · Super+F — браузер"
                         color: Theme.subtext
                         font.family: Theme.font
                         font.pixelSize: Theme.fontSmall

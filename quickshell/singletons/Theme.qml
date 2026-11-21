@@ -8,6 +8,7 @@ Singleton {
     id: root
 
     property var fileColors: ({})
+    property var fileColorsLight: ({})
 
     readonly property bool useMatugen: Settings.data.useMatugen
         && ((Settings.data.matugenColors && Settings.data.matugenColors.primary !== undefined)
@@ -18,7 +19,8 @@ Singleton {
         const dark = (Settings.data.matugenColors && Settings.data.matugenColors.primary !== undefined)
             ? Settings.data.matugenColors : root.fileColors;
         const light = (Settings.data.matugenColorsLight && Settings.data.matugenColorsLight.primary !== undefined)
-            ? Settings.data.matugenColorsLight : dark;
+            ? Settings.data.matugenColorsLight
+            : (root.fileColorsLight && root.fileColorsLight.primary !== undefined ? root.fileColorsLight : dark);
         const colors = root.isDark ? dark : light;
         if (colors && colors[key] !== undefined && colors[key] !== null && colors[key] !== "")
             return colors[key];
@@ -29,12 +31,14 @@ Singleton {
         path: Utils.configHome + "/stylish/matugen-colors.json"
         watchChanges: true
         printErrors: false
-        onLoaded: {
-            try {
-                root.fileColors = JSON.parse(text());
-            } catch (e) {
-            }
-        }
+        onLoaded: { try { root.fileColors = JSON.parse(text()); } catch (e) {} }
+    }
+
+    FileView {
+        path: Utils.configHome + "/stylish/matugen-colors-light.json"
+        watchChanges: true
+        printErrors: false
+        onLoaded: { try { root.fileColorsLight = JSON.parse(text()); } catch (e) {} }
     }
 
     // Core palette -----------------------------------------------------------

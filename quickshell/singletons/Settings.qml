@@ -75,6 +75,7 @@ Singleton {
             property bool notificationsDnd: false
             property bool osdEnabled: true
             property int tagCount: 10
+            property int wallpaperTransitionMs: 700
         }
     }
 }

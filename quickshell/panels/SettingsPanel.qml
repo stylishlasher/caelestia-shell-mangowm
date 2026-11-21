@@ -11,6 +11,14 @@ DropPanel {
     preferredHeight: 650
 
     property int tab: 0
+
+    Connections {
+        target: Ui
+        function onDesktopEditRequestChanged() {
+            root.tab = 3;
+            Ui.open("settings", root.screen ? root.screen.name : "");
+        }
+    }
     property bool addingApp: false
     property string appQuery: ""
 
@@ -966,7 +974,10 @@ DropPanel {
                         Chip {
                             label: "Случайные обои"
                             glyph: "\uf021"
-                            onClicked: Utils.run("stylish-set-wallpaper --random")
+                            onClicked: {
+                                const cmd = "if command -v stylish-set-wallpaper >/dev/null 2>&1; then stylish-set-wallpaper --random; elif [ -x ~/.local/bin/stylish-set-wallpaper ]; then ~/.local/bin/stylish-set-wallpaper --random; elif [ -x ~/.config/quickshell/stylish/scripts/stylish-set-wallpaper ]; then ~/.config/quickshell/stylish/scripts/stylish-set-wallpaper --random; fi";
+                                Utils.run(cmd);
+                            }
                         }
                     }
 

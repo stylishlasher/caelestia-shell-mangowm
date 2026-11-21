@@ -63,6 +63,66 @@ ShellRoot {
         }
     }
 
+    // Desktop background hit area for right-click menu -----------------------
+    Variants {
+        model: Quickshell.screens
+
+        PanelWindow {
+            required property var modelData
+            screen: modelData
+            color: "transparent"
+            focusable: false
+            exclusionMode: ExclusionMode.Ignore
+            exclusiveZone: 0
+            anchors { top: true; bottom: true; left: true; right: true }
+            WlrLayershell.layer: WlrLayer.Bottom
+            WlrLayershell.namespace: "stylish-desktop-bg"
+            implicitWidth: 1
+            implicitHeight: 1
+
+            MouseArea {
+                anchors.fill: parent
+                acceptedButtons: Qt.RightButton | Qt.LeftButton
+                onClicked: mouse => {
+                    if (mouse.button === Qt.RightButton) {
+                        Ui.open("settings", modelData ? String(modelData.name) : shell.screenTarget());
+                        // open Widgets tab
+                        Ui.desktopEditRequest++;
+                    } else {
+                        Ui.close();
+                    }
+                }
+            }
+        }
+    }
+
+    // Wallpaper transition overlay ------------------------------------------
+    Variants {
+        model: Quickshell.screens
+
+        PanelWindow {
+            id: wpOverlay
+            required property var modelData
+            screen: modelData
+            visible: Ui.wallpaperTransition > 0.01
+            color: Utils.alpha(Theme.bg, Ui.wallpaperTransition * 0.85)
+            focusable: false
+            exclusionMode: ExclusionMode.Ignore
+            exclusiveZone: 0
+            anchors { top: true; bottom: true; left: true; right: true }
+            WlrLayershell.layer: WlrLayer.Overlay
+            WlrLayershell.namespace: "stylish-wallpaper-transition"
+
+            Image {
+                anchors.fill: parent
+                source: Ui.wallpaperTransitionImage.length > 0 ? "file://" + Ui.wallpaperTransitionImage : ""
+                fillMode: Image.PreserveAspectCrop
+                opacity: Ui.wallpaperTransition
+                asynchronous: true
+            }
+        }
+    }
+
     // Drop-down panels ------------------------------------------------------
     Variants {
         model: Quickshell.screens

@@ -14,6 +14,16 @@ Singleton {
     property int osdBrightness: 50
     property int osdPercent: 0
 
+    property int desktopEditRequest: 0
+    property real wallpaperTransition: 0
+    property string wallpaperTransitionImage: ""
+
+    function startWallpaperTransition(path) {
+        wallpaperTransitionImage = path || "";
+        wallpaperTransition = 1;
+        wpAnim.restart();
+    }
+
     function open(name, screen) {
         root.screenName = screen !== undefined ? screen : "";
         root.panel = name;

@@ -32,7 +32,12 @@ DropPanel {
 
     function apply(path) {
         Settings.data.wallpaper = path;
-        Utils.run("stylish-set-wallpaper " + Utils.shq(path));
+        Settings.data.wallpaper = path;
+        const cmd = "if command -v stylish-set-wallpaper >/dev/null 2>&1; then stylish-set-wallpaper " + Utils.shq(path)
+            + "; elif [ -x ~/.local/bin/stylish-set-wallpaper ]; then ~/.local/bin/stylish-set-wallpaper " + Utils.shq(path)
+            + "; elif [ -x ~/.config/quickshell/stylish/scripts/stylish-set-wallpaper ]; then ~/.config/quickshell/stylish/scripts/stylish-set-wallpaper " + Utils.shq(path)
+            + "; fi";
+        Utils.run(cmd);
     }
 
     function fileName(path) {
@@ -102,7 +107,10 @@ DropPanel {
                 anchors.verticalCenter: parent.verticalCenter
                 label: "Случайные"
                 glyph: "\uf074"
-                onClicked: Utils.run("stylish-set-wallpaper --random")
+                onClicked: {
+                    const cmd = "if command -v stylish-set-wallpaper >/dev/null 2>&1; then stylish-set-wallpaper --random; elif [ -x ~/.local/bin/stylish-set-wallpaper ]; then ~/.local/bin/stylish-set-wallpaper --random; elif [ -x ~/.config/quickshell/stylish/scripts/stylish-set-wallpaper ]; then ~/.config/quickshell/stylish/scripts/stylish-set-wallpaper --random; fi";
+                    Utils.run(cmd);
+                }
             }
 
             Chip {

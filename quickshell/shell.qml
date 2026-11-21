@@ -80,19 +80,52 @@ ShellRoot {
             implicitWidth: 1
             implicitHeight: 1
 
+            Timer { id: rightClickTimer; interval: 350; onTriggered: { /* single right click ignored */ } }
             MouseArea {
                 anchors.fill: parent
                 acceptedButtons: Qt.RightButton | Qt.LeftButton
                 onClicked: mouse => {
                     if (mouse.button === Qt.RightButton) {
-                        Ui.open("settings", modelData ? String(modelData.name) : shell.screenTarget());
-                        // open Widgets tab
-                        Ui.desktopEditRequest++;
+                        if (rightClickTimer.running) {
+                            rightClickTimer.stop();
+                            Ui.open("settings", modelData ? String(modelData.name) : shell.screenTarget());
+                            Ui.desktopEditRequest++;
+                        } else {
+                            rightClickTimer.restart();
+                        }
                     } else {
                         Ui.close();
                     }
                 }
             }
+        }
+    }
+
+    // Top hover dashboard trigger -------------------------------------------
+    Variants {
+        model: Quickshell.screens
+
+        PanelWindow {
+            required property var modelData
+            screen: modelData
+            visible: Settings.data.barEnabled
+            color: "transparent"
+            focusable: false
+            exclusionMode: ExclusionMode.Ignore
+            exclusiveZone: 0
+            implicitHeight: 6
+            anchors { top: true; left: true; right: true }
+            margins { left: 200; right: 200 }
+            WlrLayershell.layer: WlrLayer.Overlay
+            WlrLayershell.namespace: "stylish-dashboard-trigger"
+
+            MouseArea {
+                anchors.fill: parent
+                hoverEnabled: true
+                onEntered: Ui.open("dashboard", modelData ? String(modelData.name) : "")
+                onExited: closeTimer.restart()
+            }
+            Timer { id: closeTimer; interval: 500; onTriggered: { if (Ui.panel === "dashboard") Ui.close(); } }
         }
     }
 
@@ -210,6 +243,22 @@ ShellRoot {
         model: Quickshell.screens
 
         NotificationPopups {
+            modelData: modelData
+        }
+    }
+
+    Variants {
+        model: Quickshell.screens
+
+        DashboardPanel {
+            modelData: modelData
+        }
+    }
+
+    Variants {
+        model: Quickshell.screens
+
+        NotificationPanel {
             modelData: modelData
         }
     }

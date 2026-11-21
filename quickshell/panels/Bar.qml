@@ -73,10 +73,10 @@ PanelWindow {
     }
 
     margins {
-        top: onTop ? 6 : 0
-        bottom: !onTop ? 6 : 0
-        left: 8
-        right: 8
+        top: onTop ? (Settings.data.barFloating ? Settings.data.barMargin : 0) : 0
+        bottom: !onTop ? (Settings.data.barFloating ? Settings.data.barMargin : 0) : 0
+        left: Settings.data.barFloating ? Settings.data.barMargin : 0
+        right: Settings.data.barFloating ? Settings.data.barMargin : 0
     }
 
     function volumeGlyph() {
@@ -113,9 +113,9 @@ PanelWindow {
 
     Rectangle {
         anchors.fill: parent
-        radius: Theme.radius
+        radius: Settings.data.barFloating ? Theme.radius : 0
         color: Theme.barColor
-        border.width: 1
+        border.width: Settings.data.barFloating ? 1 : 0
         border.color: Utils.alpha(Theme.text, 0.07)
 
         MouseArea {
@@ -154,11 +154,12 @@ PanelWindow {
 
             Row {
                 id: tags
+                visible: Settings.data.showWorkspaces
                 spacing: 3
                 anchors.verticalCenter: parent.verticalCenter
 
                 Repeater {
-                    model: Settings.data.showTags ? root.tagList : []
+                    model: Settings.data.showTags && Settings.data.showWorkspaces ? root.tagList : []
 
                     Item {
                         id: tagItem
@@ -261,6 +262,29 @@ PanelWindow {
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.verticalCenter: parent.verticalCenter
             spacing: 8
+
+            Rectangle {
+                visible: Settings.data.showActiveWindow
+                width: Math.min(260, activeWinText.implicitWidth + 20)
+                height: 26
+                radius: 8
+                color: "transparent"
+
+                Text {
+                    id: activeWinText
+                    anchors.centerIn: parent
+                    width: Math.min(240, implicitWidth)
+                    text: {
+                        const clients = Mango.clientsFor(root.monitorName);
+                        for (let i = 0; i < clients.length; i++) if (clients[i].is_focused) return clients[i].title || clients[i].appid || "";
+                        return "";
+                    }
+                    color: Theme.subtext
+                    font.family: Theme.font
+                    font.pixelSize: Theme.fontSmall
+                    elide: Text.ElideRight
+                }
+            }
 
             Rectangle {
                 visible: Settings.data.showMedia && Media.hasPlayer
@@ -469,7 +493,7 @@ PanelWindow {
                 iconSize: 14
                 active: Ui.panel === "control"
                 onClicked: {
-                    Ui.toggle("control", root.monitorName);
+                    Ui.toggle("notifications", root.monitorName);
                     Notifications.markRead();
                 }
 

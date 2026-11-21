@@ -71,6 +71,17 @@ Singleton {
             property bool showDesktopMedia: true
             property string desktopWidgetPosition: "top-right" // top-left | top-right | bottom-left | bottom-right
 
+            // Night light
+            property bool nightLightEnabled: false
+            property int nightLightTemp: 4500
+
+            // Bar layout / behavior
+            property bool barFloating: true
+            property int barMargin: 8
+            property string barStyle: "pills" // pills | solid
+            property bool showActiveWindow: true
+            property bool showWorkspaces: true
+
             // Misc
             property bool notificationsDnd: false
             property bool osdEnabled: true

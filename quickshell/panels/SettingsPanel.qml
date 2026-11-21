@@ -15,7 +15,7 @@ DropPanel {
     Connections {
         target: Ui
         function onDesktopEditRequestChanged() {
-            root.tab = 3;
+            root.tab = 4;
             Ui.open("settings", root.screen ? root.screen.name : "");
         }
     }
@@ -351,10 +351,93 @@ DropPanel {
                 }
             }
 
-            // Bar ----------------------------------------------------------
+            // Geometry -------------------------------------------------------
             Flickable {
                 anchors.fill: parent
                 visible: root.tab === 1
+                clip: true
+                contentHeight: geometryPage.implicitHeight
+                boundsBehavior: Flickable.StopAtBounds
+
+                Column {
+                    id: geometryPage
+                    width: parent.width - 8
+                    spacing: 2
+
+                    SectionHeader { label: "Форма и отступы" }
+
+                    SettingRow {
+                        title: "Скругления"
+                        description: "Радиус панелей и карточек"
+                        Row {
+                            spacing: 8
+                            StyledSlider { width: 160; from: 6; to: 30; value: Settings.data.cornerRadius; onMoved: v => Settings.data.cornerRadius = Math.round(v) }
+                            Text { width: 36; text: Math.round(Settings.data.cornerRadius); color: Theme.subtext; font.family: Theme.font; font.pixelSize: Theme.fontSmall }
+                        }
+                    }
+
+                    SettingRow {
+                        title: "Высота панели"
+                        description: "Толщина верхней панели"
+                        Row {
+                            spacing: 8
+                            StyledSlider { width: 160; from: 30; to: 56; value: Settings.data.barHeight; onMoved: v => Settings.data.barHeight = Math.round(v) }
+                            Text { width: 42; text: Math.round(Settings.data.barHeight) + " px"; color: Theme.subtext; font.family: Theme.font; font.pixelSize: Theme.fontSmall }
+                        }
+                    }
+
+                    SettingRow {
+                        title: "Размер иконок дока"
+                        description: "Размер приложений в доке"
+                        Row {
+                            spacing: 8
+                            StyledSlider { width: 160; from: 30; to: 64; value: Settings.data.dockIconSize; onMoved: v => Settings.data.dockIconSize = Math.round(v) }
+                            Text { width: 42; text: Math.round(Settings.data.dockIconSize) + " px"; color: Theme.subtext; font.family: Theme.font; font.pixelSize: Theme.fontSmall }
+                        }
+                    }
+
+                    SectionHeader { label: "Прозрачность" }
+
+                    SettingRow {
+                        title: "Прозрачность панели"
+                        description: "Фон панели/дока"
+                        Row {
+                            spacing: 8
+                            StyledSlider { width: 160; from: 0.3; to: 1; value: Settings.data.barOpacity; onMoved: v => Settings.data.barOpacity = v }
+                            Text { width: 36; text: root.percent(Settings.data.barOpacity); color: Theme.subtext; font.family: Theme.font; font.pixelSize: Theme.fontSmall }
+                        }
+                    }
+
+                    SettingRow {
+                        title: "Прозрачность меню"
+                        description: "Фон всплывающих панелей"
+                        Row {
+                            spacing: 8
+                            StyledSlider { width: 160; from: 0.5; to: 1; value: Settings.data.panelOpacity; onMoved: v => Settings.data.panelOpacity = v }
+                            Text { width: 36; text: root.percent(Settings.data.panelOpacity); color: Theme.subtext; font.family: Theme.font; font.pixelSize: Theme.fontSmall }
+                        }
+                    }
+
+                    SectionHeader { label: "Анимации" }
+
+                    SettingRow {
+                        title: "Анимация смены обоев"
+                        description: "Длительность перехода"
+                        Row {
+                            spacing: 8
+                            StyledSlider { width: 160; from: 0; to: 1500; value: Settings.data.wallpaperTransitionMs; onMoved: v => Settings.data.wallpaperTransitionMs = Math.round(v) }
+                            Text { width: 52; text: Math.round(Settings.data.wallpaperTransitionMs) + " ms"; color: Theme.subtext; font.family: Theme.font; font.pixelSize: Theme.fontSmall }
+                        }
+                    }
+
+                    Item { width: 1; height: 12 }
+                }
+            }
+
+            // Bar ----------------------------------------------------------
+            Flickable {
+                anchors.fill: parent
+                visible: root.tab === 2
                 clip: true
                 contentHeight: barPage.implicitHeight
                 boundsBehavior: Flickable.StopAtBounds
@@ -378,16 +461,32 @@ DropPanel {
                     SettingRow {
                         title: "Позиция"
                         description: "Сверху или снизу экрана"
-                        Chip {
-                            label: "Сверху"
-                            active: Settings.data.barPosition === "top"
-                            onClicked: Settings.data.barPosition = "top"
+                        Chip { label: "Сверху"; active: Settings.data.barPosition === "top"; onClicked: Settings.data.barPosition = "top" }
+                        Chip { label: "Снизу"; active: Settings.data.barPosition === "bottom"; onClicked: Settings.data.barPosition = "bottom" }
+                    }
+                    SettingRow {
+                        title: "Плавающая панель"
+                        description: "Отступы и скругления по краям"
+                        ToggleSwitch { checked: Settings.data.barFloating; onToggled: v => Settings.data.barFloating = v }
+                    }
+                    SettingRow {
+                        title: "Отступ панели"
+                        description: "Внешний отступ в плавающем режиме"
+                        Row {
+                            spacing: 8
+                            StyledSlider { width: 160; from: 0; to: 20; value: Settings.data.barMargin; onMoved: v => Settings.data.barMargin = Math.round(v) }
+                            Text { width: 36; text: Math.round(Settings.data.barMargin); color: Theme.subtext; font.family: Theme.font; font.pixelSize: Theme.fontSmall }
                         }
-                        Chip {
-                            label: "Снизу"
-                            active: Settings.data.barPosition === "bottom"
-                            onClicked: Settings.data.barPosition = "bottom"
-                        }
+                    }
+                    SettingRow {
+                        title: "Активное окно"
+                        description: "Показывать заголовок активного окна в центре"
+                        ToggleSwitch { checked: Settings.data.showActiveWindow; onToggled: v => Settings.data.showActiveWindow = v }
+                    }
+                    SettingRow {
+                        title: "Рабочие пространства"
+                        description: "Показывать теги/воркспейсы"
+                        ToggleSwitch { checked: Settings.data.showWorkspaces; onToggled: v => Settings.data.showWorkspaces = v }
                     }
 
                     SettingRow {
@@ -441,7 +540,7 @@ DropPanel {
             // Dock ---------------------------------------------------------
             Flickable {
                 anchors.fill: parent
-                visible: root.tab === 2
+                visible: root.tab === 3
                 clip: true
                 contentHeight: dockPage.implicitHeight
                 boundsBehavior: Flickable.StopAtBounds
@@ -640,7 +739,7 @@ DropPanel {
             // Widgets ------------------------------------------------------
             Flickable {
                 anchors.fill: parent
-                visible: root.tab === 3
+                visible: root.tab === 4
                 clip: true
                 contentHeight: widgetsPage.implicitHeight
                 boundsBehavior: Flickable.StopAtBounds
@@ -841,7 +940,7 @@ DropPanel {
             // Weather ------------------------------------------------------
             Flickable {
                 anchors.fill: parent
-                visible: root.tab === 4
+                visible: root.tab === 5
                 clip: true
                 contentHeight: weatherPage.implicitHeight
                 boundsBehavior: Flickable.StopAtBounds
@@ -941,7 +1040,7 @@ DropPanel {
             // System -------------------------------------------------------
             Flickable {
                 anchors.fill: parent
-                visible: root.tab === 5
+                visible: root.tab === 6
                 clip: true
                 contentHeight: systemPage.implicitHeight
                 boundsBehavior: Flickable.StopAtBounds
@@ -950,6 +1049,31 @@ DropPanel {
                     id: systemPage
                     width: parent.width - 8
                     spacing: 2
+
+                    SectionHeader { label: "Ночной свет" }
+
+                    SettingRow {
+                        title: "Включить ночной свет"
+                        description: "Тёплый оттенок экрана (wlsunset/gammastep)"
+                        ToggleSwitch {
+                            checked: Settings.data.nightLightEnabled
+                            onToggled: v => {
+                                Settings.data.nightLightEnabled = v;
+                                if (v) Utils.run("pkill -x wlsunset gammastep 2>/dev/null; if command -v wlsunset >/dev/null; then wlsunset -T 6500 -t " + Settings.data.nightLightTemp + " & elif command -v gammastep >/dev/null; then gammastep -O " + Settings.data.nightLightTemp + " & fi");
+                                else Utils.run("pkill -x wlsunset gammastep 2>/dev/null");
+                            }
+                        }
+                    }
+
+                    SettingRow {
+                        title: "Температура"
+                        description: "Теплота ночного света"
+                        Row {
+                            spacing: 8
+                            StyledSlider { width: 160; from: 2500; to: 6500; value: Settings.data.nightLightTemp; onMoved: v => { Settings.data.nightLightTemp = Math.round(v); if (Settings.data.nightLightEnabled) { Utils.run("pkill -x wlsunset gammastep 2>/dev/null; if command -v wlsunset >/dev/null; then wlsunset -T 6500 -t " + Settings.data.nightLightTemp + " & elif command -v gammastep >/dev/null; then gammastep -O " + Settings.data.nightLightTemp + " & fi"); } } }
+                            Text { width: 52; text: Math.round(Settings.data.nightLightTemp) + "K"; color: Theme.subtext; font.family: Theme.font; font.pixelSize: Theme.fontSmall }
+                        }
+                    }
 
                     SectionHeader { label: "Обои" }
 
